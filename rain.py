@@ -42,7 +42,7 @@ df = gpd.read_file('../rainfall_data/station_locations.geojson').sort_values('Na
 lat=df.geometry.y
 lon=df.geometry.x
 values = df.merge(stations[stations.index == stations.index[100]], left_on='id', right_on='station_name')
-print(values.Rain)
+
 data = go.Data([
     go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100),
     go.Scattermapbox(
@@ -74,7 +74,7 @@ locations_figure = go.Figure(data, layout)
 locations_graph = dcc.Graph(
     id='locations',
     figure=locations_figure,
-    clear_on_unhover=True
+    clear_on_unhover=True,
 )
 
 slider = dcc.Slider(id='time-slider',
@@ -99,13 +99,12 @@ def update_plot(hover):
             'type': 'line', 'name': name,
             'visible': (True if name == hover['points'][0]['id'] else 'legendonly') if hover else True})
 
-    return {'data': traces}
+    return {'data': traces, 'layout': dict(hovermode='closest')}
 
 @app.callback(Output(component_id='locations', component_property='figure'),
               [Input(component_id='time-slider', component_property='value')])
 def update_plot(value):
     values = df.merge(stations[stations.index == stations.index[value]], left_on='id', right_on='station_name')
-    print(value)
     data = [
         go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100, zmin=0, zmax=10),
         go.Scattermapbox(
@@ -121,6 +120,16 @@ def update_plot(value):
     ]
 
     return go.Figure(data, layout)
+
+@app.callback(Output(component_id='time-slider', component_property='value'),
+              [Input(component_id='rainfall', component_property='hoverData')])
+def update_plot(hover):
+
+    if hover:
+        t = pd.to_datetime(hover['points'][0]['x'])
+        return stations.index.unique().tolist().index(t)
+    else:
+        return 0
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8889, host='0.0.0.0')
