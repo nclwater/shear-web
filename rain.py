@@ -56,10 +56,7 @@ data = go.Data([
     ),
 
 ])
-
-locations_figure = go.Figure(data)
-
-locations_figure.update_layout(
+layout = go.Layout(
     hovermode='closest',
     mapbox=go.layout.Mapbox(
         accesstoken=token,
@@ -70,6 +67,9 @@ locations_figure.update_layout(
         zoom=10
     )
 )
+locations_figure = go.Figure(data, layout)
+
+
 
 locations_graph = dcc.Graph(
     id='locations',
@@ -78,7 +78,7 @@ locations_graph = dcc.Graph(
 )
 
 slider = dcc.Slider(id='time-slider',
-                    min=0, max=len(stations.index.unique()))
+                    min=0, max=len(stations.index.unique()), value=0, updatemode='mouseup')
 
 children.append(slider)
 children.append(locations_graph)
@@ -101,6 +101,26 @@ def update_plot(hover):
 
     return {'data': traces}
 
+@app.callback(Output(component_id='locations', component_property='figure'),
+              [Input(component_id='time-slider', component_property='value')])
+def update_plot(value):
+    values = df.merge(stations[stations.index == stations.index[value]], left_on='id', right_on='station_name')
+    print(value)
+    data = [
+        go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100, zmin=0, zmax=10),
+        go.Scattermapbox(
+            lat=lat,
+            lon=lon,
+            hovertext=df['Name'],
+            hoverinfo='text',
+            ids=df['id'],
+            marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']),
+            # z=values.Rain, radius=10
+        ),
+
+    ]
+
+    return go.Figure(data, layout)
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8889, host='0.0.0.0')
