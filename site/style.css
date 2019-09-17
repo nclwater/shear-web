@@ -1,0 +1,49 @@
+html {
+    font-family:Arial
+}
+
+#controls {
+    /*width:100px;*/
+    pointer-events: all;
+    height:calc(~"96vh - 50px");
+    position:absolute;
+    top: 100px;
+    right: 20px;
+    bottom:20px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 10px
+}
+
+#sliders {
+    width:calc(~"100vh - 80px");
+    pointer-events: all;
+    height:40px;
+    position:absolute;
+    top: 20px;
+    left: 60px;
+    right:20px;
+    /*bottom:20px;*/
+    z-index: 11;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 10px
+}
+
+#box {
+    pointer-events: none;
+    background: none !important;
+
+
+}
+
+#mapid {
+    z-index: 5;
+    min-height:100vh;
+    pointer-events: all;
+  }
+
+body {
+    margin: 0;
+}
