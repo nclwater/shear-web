@@ -39,16 +39,25 @@ children.append(dcc.Graph(id='rainfall'))
 
 df = gpd.read_file('../rainfall_data/station_locations.geojson').sort_values('Name')
 
-locations_figure = go.Figure(
+lat=df.geometry.y
+lon=df.geometry.x
+values = df.merge(stations[stations.index == stations.index[100]], left_on='id', right_on='station_name')
+print(values.Rain)
+data = go.Data([
+    go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100),
     go.Scattermapbox(
-        lat=df.geometry.y,
-        lon=df.geometry.x,
+        lat=lat,
+        lon=lon,
         hovertext=df['Name'],
         hoverinfo='text',
         ids=df['id'],
-        marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'])
-    )
-)
+        marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']),
+        # z=values.Rain, radius=10
+    ),
+
+])
+
+locations_figure = go.Figure(data)
 
 locations_figure.update_layout(
     hovermode='closest',
@@ -67,7 +76,14 @@ locations_graph = dcc.Graph(
     figure=locations_figure,
     clear_on_unhover=True
 )
+
+slider = dcc.Slider(id='time-slider',
+                    min=0, max=len(stations.index.unique()))
+
+children.append(slider)
 children.append(locations_graph)
+
+
 
 app.layout = html.Div(children=children)
 
