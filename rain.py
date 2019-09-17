@@ -106,7 +106,8 @@ def update_plot(hover):
 def update_plot(value):
     values = df.merge(stations[stations.index == stations.index[value]], left_on='id', right_on='station_name')
     data = [
-        go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100, zmin=0, zmax=10),
+        go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100, zmin=0, zmax=10,
+                         colorscale='Blues'),
         go.Scattermapbox(
             lat=lat,
             lon=lon,
@@ -114,7 +115,9 @@ def update_plot(value):
             hoverinfo='text',
             ids=df['id'],
             marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']),
-            # z=values.Rain, radius=10
+            text=df['Name'],
+            textposition='top center',
+            mode='markers+text'
         ),
 
     ]
