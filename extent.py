@@ -1,0 +1,115 @@
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import geopandas as gpd
+import plotly.graph_objects as go
+from dash.dependencies import Input, Output
+
+df = gpd.read_file('extents_4326_simple.gpkg')
+df.duration = (df.duration / 3600).astype(int)
+
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+children = [html.H1(children=''),  html.Div(children='')]
+
+e = df[(df.threshold == df.threshold[0]) & (df.run_id == df.run_id[0])]
+
+
+layout = go.Layout(
+    hovermode='closest',
+    margin=go.layout.Margin(l=0, r=0, b=0, t=0),
+    mapbox_style="carto-positron",
+    uirevision=True,
+    mapbox=go.layout.Mapbox(
+        center=go.layout.mapbox.Center(
+            lat=e.geometry.centroid.y.mean(),
+            lon=e.geometry.centroid.x.mean()
+        ),
+        zoom=10
+    )
+)
+fig = go.Figure(go.Choroplethmapbox(), layout)
+
+graph = dcc.Graph(
+    id='map',
+    figure=fig,
+    clear_on_unhover=True,
+    style={
+        'zIndex': -1}
+)
+
+
+thresholds = df.threshold.unique()
+rainfall = df.rainfall.unique()
+duration = df.duration.unique()
+threshold_marks = {key: str(val) for key, val in enumerate(thresholds)}
+rainfall_marks = {key: str(val) for key, val in enumerate(rainfall)}
+duration_marks = {key: str(val) for key, val in enumerate(duration)}
+
+
+def create_slider(title, name, marks):
+    return html.Div(
+        children=[
+            title,
+            dcc.Slider(
+                id=name,
+                min=0,
+                max=len(marks)-1,
+                marks=marks,
+                value=0,
+                updatemode='drag'
+            )
+        ],
+        style={'margin': 40}
+    )
+
+
+slider = create_slider('Depth Threshold (m)', 'threshold-slider', threshold_marks)
+rainfall_slider = create_slider('Rainfall Amount (mm)', 'rainfall-slider', rainfall_marks)
+duration_slider = create_slider('Rainfall Duration (hrs)', 'duration-slider', marks=duration_marks)
+
+green_area = html.Div(dcc.Checklist(id='green-areas',
+                                    options=[{'label': 'Green Areas', 'value': 'green_areas'}]),
+                      style={'margin': 50, 'text-align': 'center'})
+
+slider_div = html.Div(children=[slider, rainfall_slider, duration_slider, green_area],
+                      style={'margin': 50, })
+
+children.append(slider_div)
+children.append(graph)
+
+app.layout = html.Div(children=children)
+
+
+@app.callback(Output(component_id='map', component_property='figure'),
+              [Input(component_id='threshold-slider', component_property='value'),
+               Input(component_id='rainfall-slider', component_property='value'),
+               Input(component_id='duration-slider', component_property='value'),
+              Input(component_id='green-areas', component_property='value')])
+def update_plot(threshold, rain, dur, green):
+    if threshold is not None and rain is not None and dur is not None:
+
+        green = 1 if green else 0
+
+        features = df[(df.threshold == float(threshold_marks[threshold])) &
+                      (df.rainfall == float(rainfall_marks[rain])) &
+                      (df.duration == float(duration_marks[dur])) &
+                      (df.green == green)]
+
+        return go.Figure([
+            go.Choroplethmapbox(geojson=features.__geo_interface__,
+                                locations=features.index,
+                                z=features.threshold,
+                                showscale=False,
+                                colorscale=[[0, 'royalblue'], [1, 'royalblue']],
+                                marker=dict(opacity=0.5))
+        ], layout)
+    else:
+        return fig
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True, port=8899, host='0.0.0.0')
