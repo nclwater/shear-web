@@ -73,16 +73,14 @@ slider = create_slider('Depth Threshold (m)', 'threshold-slider', threshold_mark
 rainfall_slider = create_slider('Rainfall Amount (mm)', 'rainfall-slider', rainfall_marks)
 duration_slider = create_slider('Rainfall Duration (hrs)', 'duration-slider', marks=duration_marks)
 
-green_area = html.Div(dcc.Checklist(id='green-areas',
-                                    options=[{'label': 'Green Areas', 'value': 'green_areas'}]),
-                      style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
-density = html.Div(dcc.Checklist(id='density',
-                                    options=[{'label': 'Show heat-map', 'value': 'heat-map'}]),
-                   style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
+green_areas = dcc.Checklist(id='green-areas', options=[{'label': 'Green Areas', 'value': '-'}])
+green_areas_div = html.Div(green_areas, style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
 
-buildings = html.Div(dcc.Checklist(id='buildings',
-                                   options=[{'label': 'Show building depths', 'value': 'buildings'}]),
-                     style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
+density = dcc.Checklist(id='density', options=[{'label': 'Show heat-map', 'value': '-'}])
+density_div = html.Div(density,  style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
+
+buildings = dcc.Checklist(id='buildings', options=[{'label': 'Show building depths', 'value': '-'}])
+buildings_div = html.Div(buildings, style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
 
 basemap_dropdown = html.Div(children=[
 
@@ -113,7 +111,7 @@ basemap_dropdown = html.Div(children=[
 ], style={'display': 'inline-block'})
 
 slider_div = html.Div(children=[slider, rainfall_slider, duration_slider,
-                                html.Div(children=[green_area, density, buildings, basemap_dropdown],
+                                html.Div(children=[green_areas_div, density_div, buildings_div, basemap_dropdown],
                                          style={'textAlign': 'center'})],
                       style={'margin': 50, })
 
@@ -155,29 +153,33 @@ def update_plot(threshold, rain, dur, green, bm, dens, build):
                                 hoverinfo='skip',
                                 below=''
                                 ))
-
-        if build:
+        if build or dens:
             thresh = float(threshold_marks[threshold])
             depth_values = building_depths['max_depth_{}'.format(features.run_id.iloc[0])]
             buildings_above_threshold = building_depths[depth_values >= thresh]
 
-            t = go.Choroplethmapbox(
-                geojson=buildings_above_threshold.__geo_interface__,
-                locations=buildings_above_threshold.index,
-                z=depth_values[depth_values >= thresh],
-                below=''
-            )
-            traces.append(t)
+            if build:
+
+                t = go.Choroplethmapbox(
+                    geojson=buildings_above_threshold.__geo_interface__,
+                    locations=buildings_above_threshold.index,
+                    z=depth_values[depth_values >= thresh],
+                    below=''
+                )
+                traces.append(t)
+            else:
+                traces.append(go.Choroplethmapbox())
 
             if dens:
-                # centroids = buildings_above_threshold.centroid
                 traces.append(go.Densitymapbox(lat=buildings_above_threshold.y,
                                                lon=buildings_above_threshold.x,
                                                z=depth_values[depth_values >= thresh],
                                                radius=10,
                                                hoverinfo='skip',
-                                               showscale=False
+                                               showscale=True if not build else False
                                                ))
+            else:
+                traces.append(go.Densitymapbox())
 
         return go.Figure(traces, layout.update(mapbox_style=bm))
     else:
