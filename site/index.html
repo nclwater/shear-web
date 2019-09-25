@@ -32,6 +32,8 @@
                 Duration (minutes) = {{rc.durations[rc.duration]}}
                 <input type="range" ng-model="rc.amount" min="0", max="4", step="1" ng-mouseup="rc.findRun()">
                 Rainfall amount (mm) = {{rc.amounts[rc.amount]}}
+                <input type="checkbox" ng-model="rc.green" ng-change="rc.findRun()">
+                Green Areas
 
             </form>
         </div>

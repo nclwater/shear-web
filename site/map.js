@@ -25,21 +25,37 @@ angular.module('app', [])
     .controller('RunController', function(MapService, $scope){
 
         this.runs = [
-            {id: 648, amount: 20, duration: 60},
-            {id: 649, amount: 20, duration: 180},
-            {id: 650, amount: 20, duration: 360},
-            {id: 651, amount: 40, duration: 60},
-            {id: 652, amount: 40, duration: 180},
-            {id: 653, amount: 40, duration: 360},
-            {id: 654, amount: 60, duration: 60},
-            {id: 655, amount: 60, duration: 180},
-            {id: 656, amount: 60, duration: 360},
-            {id: 657, amount: 80, duration: 60},
-            {id: 658, amount: 80, duration: 180},
-            {id: 659, amount: 80, duration: 360},
-            {id: 660, amount: 100, duration: 60},
-            {id: 661, amount: 100, duration: 180},
-            {id: 662, amount: 100, duration: 360}
+            {id: 648, amount: 20, duration: 60, green: false},
+            {id: 649, amount: 20, duration: 180, green: false},
+            {id: 650, amount: 20, duration: 360, green: false},
+            {id: 651, amount: 40, duration: 60, green: false},
+            {id: 652, amount: 40, duration: 180, green: false},
+            {id: 653, amount: 40, duration: 360, green: false},
+            {id: 654, amount: 60, duration: 60, green: false},
+            {id: 655, amount: 60, duration: 180, green: false},
+            {id: 656, amount: 60, duration: 360, green: false},
+            {id: 657, amount: 80, duration: 60, green: false},
+            {id: 658, amount: 80, duration: 180, green: false},
+            {id: 659, amount: 80, duration: 360, green: false},
+            {id: 660, amount: 100, duration: 60, green: false},
+            {id: 661, amount: 100, duration: 180, green: false},
+            {id: 662, amount: 100, duration: 360, green: false},
+
+            {id: 684, amount: 20, duration: 60, green: true},
+            {id: 685, amount: 20, duration: 180, green: true},
+            {id: 686, amount: 20, duration: 360, green: true},
+            {id: 687, amount: 40, duration: 60, green: true},
+            {id: 688, amount: 40, duration: 180, green: true},
+            {id: 689, amount: 40, duration: 360, green: true},
+            {id: 690, amount: 60, duration: 60, green: true},
+            {id: 691, amount: 60, duration: 180, green: true},
+            {id: 692, amount: 60, duration: 360, green: true},
+            {id: 693, amount: 80, duration: 60, green: true},
+            {id: 694, amount: 80, duration: 180, green: true},
+            {id: 695, amount: 80, duration: 360, green: true},
+            {id: 696, amount: 100, duration: 60, green: true},
+            {id: 697, amount: 100, duration: 180, green: true},
+            {id: 698, amount: 100, duration: 360, green: true}
             ];
 
         this.durations = [60, 180, 360];
@@ -62,7 +78,10 @@ angular.module('app', [])
             let duration = this.durations[this.duration];
             for (var i=0; i < this.runs.length; i++) {
                 let run = this.runs[i];
-                if (run.amount === amount && run.duration === duration) {
+                if (run.amount === amount &&
+                    run.duration === duration &&
+                    run.green === this.green) {
+
                     console.log(amount);
                     console.log(duration);
                     console.log(run);
