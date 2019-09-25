@@ -17,12 +17,14 @@ children = [html.H1(children=''),  html.Div(children='')]
 
 e = df[(df.threshold == df.threshold[0]) & (df.run_id == df.run_id[0])]
 
+building_depths = gpd.read_file('building_depths_with_green_areas_thresholded_4326.gpkg')
 
 layout = go.Layout(
     hovermode='closest',
     margin=go.layout.Margin(l=0, r=0, b=0, t=0),
-    mapbox_style="carto-positron",
+    mapbox_style="basic",
     uirevision=True,
+    mapbox_accesstoken='pk.eyJ1IjoiZm1jY2xlYW4iLCJhIjoiY2swbWpkcXY2MTRhNTNjcHBvM3R2Z2J6MiJ9.zOehGKT1N3eask9zsKmQqA',
     mapbox=go.layout.Mapbox(
         center=go.layout.mapbox.Center(
             lat=e.geometry.centroid.y.mean(),
@@ -73,13 +75,51 @@ duration_slider = create_slider('Rainfall Duration (hrs)', 'duration-slider', ma
 
 green_area = html.Div(dcc.Checklist(id='green-areas',
                                     options=[{'label': 'Green Areas', 'value': 'green_areas'}]),
-                      style={'margin': 50, 'text-align': 'center'})
+                      style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
+density = html.Div(dcc.Checklist(id='density',
+                                    options=[{'label': 'Show heat-map', 'value': 'heat-map'}]),
+                   style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
 
-slider_div = html.Div(children=[slider, rainfall_slider, duration_slider, green_area],
+buildings = html.Div(dcc.Checklist(id='buildings',
+                                   options=[{'label': 'Show building depths', 'value': 'buildings'}]),
+                     style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
+
+basemap_dropdown = html.Div(children=[
+
+    html.P('Base Map: '),
+    dcc.Dropdown(
+        id='basemap',
+        options=[
+            {
+                'label': s.title().replace('-', ' '), 'value': s} for s in
+            [
+                "basic",
+                "streets",
+                "outdoors",
+                "light",
+                "dark",
+                "satellite",
+                "satellite-streets",
+                "open-street-map",
+                "carto-positron",
+                "carto-darkmatter",
+                "stamen-terrain",
+                "stamen-toner",
+                "stamen-watercolor"
+            ]
+        ],
+        value='basic', style={'width': 200, 'margin': 10}),
+
+], style={'display': 'inline-block'})
+
+slider_div = html.Div(children=[slider, rainfall_slider, duration_slider,
+                                html.Div(children=[green_area, density, buildings, basemap_dropdown],
+                                         style={'textAlign': 'center'})],
                       style={'margin': 50, })
 
 children.append(slider_div)
 children.append(graph)
+children.append(html.Div(id='layout', children=['']))
 
 app.layout = html.Div(children=children)
 
@@ -88,8 +128,12 @@ app.layout = html.Div(children=children)
               [Input(component_id='threshold-slider', component_property='value'),
                Input(component_id='rainfall-slider', component_property='value'),
                Input(component_id='duration-slider', component_property='value'),
-              Input(component_id='green-areas', component_property='value')])
-def update_plot(threshold, rain, dur, green):
+              Input(component_id='green-areas', component_property='value'),
+               Input(component_id='basemap', component_property='value'),
+               Input(component_id='density', component_property='value'),
+               Input(component_id='buildings', component_property='value'),
+               ])
+def update_plot(threshold, rain, dur, green, bm, dens, build):
     if threshold is not None and rain is not None and dur is not None:
 
         green = 1 if green else 0
@@ -99,16 +143,53 @@ def update_plot(threshold, rain, dur, green):
                       (df.duration == float(duration_marks[dur])) &
                       (df.green == green)]
 
-        return go.Figure([
+        traces = list()
+
+        traces.append(
             go.Choroplethmapbox(geojson=features.__geo_interface__,
                                 locations=features.index,
                                 z=features.threshold,
                                 showscale=False,
                                 colorscale=[[0, 'royalblue'], [1, 'royalblue']],
-                                marker=dict(opacity=0.5))
-        ], layout)
+                                marker=dict(opacity=0.5),
+                                hoverinfo='skip',
+                                below=''
+                                ))
+        # if dens:
+        #     traces.append(go.Densitymapbox(lat=y,
+        #                                    lon=x,
+        #                                    z=building_depths['max_depth_{}'.format(features.run_id.iloc[0])],
+        #                      # radius=10,
+        #                      hoverinfo='skip',
+        #                      zmin=0,
+        #                      zmax=1,
+        #                  colorscale='Blues'))
+
+        if build:
+            thresh = float(threshold_marks[threshold])
+            depth_values = building_depths['max_depth_{}'.format(features.run_id.iloc[0])]
+            buildings_above_threshold = building_depths[depth_values >= thresh]
+
+            t = go.Choroplethmapbox(
+                geojson=buildings_above_threshold.__geo_interface__,
+                locations=buildings_above_threshold.index,
+                z=depth_values[depth_values >= thresh],
+                below=''
+            )
+            traces.append(t)
+
+        return go.Figure(traces, layout.update(mapbox_style=bm))
     else:
         return fig
+
+@app.callback(Output('layout', 'children'),
+              [Input('map', 'relayoutData')])
+def show_layout(lay):
+    if lay is not None:
+        if 'mapbox.zoom' in lay:
+            return [str(lay['mapbox.zoom'])]
+        else:
+            return []
 
 
 if __name__ == '__main__':
