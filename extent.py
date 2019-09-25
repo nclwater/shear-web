@@ -155,15 +155,6 @@ def update_plot(threshold, rain, dur, green, bm, dens, build):
                                 hoverinfo='skip',
                                 below=''
                                 ))
-        # if dens:
-        #     traces.append(go.Densitymapbox(lat=y,
-        #                                    lon=x,
-        #                                    z=building_depths['max_depth_{}'.format(features.run_id.iloc[0])],
-        #                      # radius=10,
-        #                      hoverinfo='skip',
-        #                      zmin=0,
-        #                      zmax=1,
-        #                  colorscale='Blues'))
 
         if build:
             thresh = float(threshold_marks[threshold])
@@ -177,6 +168,16 @@ def update_plot(threshold, rain, dur, green, bm, dens, build):
                 below=''
             )
             traces.append(t)
+
+            if dens:
+                # centroids = buildings_above_threshold.centroid
+                traces.append(go.Densitymapbox(lat=buildings_above_threshold.y,
+                                               lon=buildings_above_threshold.x,
+                                               z=depth_values[depth_values >= thresh],
+                                               radius=10,
+                                               hoverinfo='skip',
+                                               showscale=False
+                                               ))
 
         return go.Figure(traces, layout.update(mapbox_style=bm))
     else:
