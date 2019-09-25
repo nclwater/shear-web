@@ -58,6 +58,7 @@ data = go.Data([
 ])
 layout = go.Layout(
     hovermode='closest',
+    uirevision=True,
     mapbox=go.layout.Mapbox(
         accesstoken=token,
         center=go.layout.mapbox.Center(
@@ -99,7 +100,7 @@ def update_plot(hover):
             'type': 'line', 'name': name,
             'visible': (True if name == hover['points'][0]['id'] else 'legendonly') if hover else True})
 
-    return {'data': traces, 'layout': dict(hovermode='closest')}
+    return {'data': traces, 'layout': dict(hovermode='closest', uirevision=True)}
 
 @app.callback(Output(component_id='locations', component_property='figure'),
               [Input(component_id='time-slider', component_property='value')])
