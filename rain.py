@@ -32,18 +32,15 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-children = [html.H1(children=''),  html.Div(children='')]
-
-
-children.append(dcc.Graph(id='rainfall'))
+children = [dcc.Graph(id='rainfall')]
 
 df = gpd.read_file('../rainfall_data/station_locations.geojson').sort_values('Name')
 
-lat=df.geometry.y
-lon=df.geometry.x
+lat = df.geometry.y
+lon = df.geometry.x
 values = df.merge(stations[stations.index == stations.index[100]], left_on='id', right_on='station_name')
 
-data = go.Data([
+data = [
     go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100),
     go.Scattermapbox(
         lat=lat,
@@ -55,7 +52,7 @@ data = go.Data([
         # z=values.Rain, radius=10
     ),
 
-])
+]
 layout = go.Layout(
     hovermode='closest',
     uirevision=True,
@@ -70,8 +67,6 @@ layout = go.Layout(
 )
 locations_figure = go.Figure(data, layout)
 
-
-
 locations_graph = dcc.Graph(
     id='locations',
     figure=locations_figure,
@@ -84,13 +79,11 @@ slider = dcc.Slider(id='time-slider',
 children.append(slider)
 children.append(locations_graph)
 
-
-
 app.layout = html.Div(children=children)
 
 @app.callback(Output(component_id='rainfall', component_property='figure'),
               [Input(component_id='locations', component_property='hoverData')])
-def update_plot(hover):
+def update_lines(hover):
 
     traces = []
     for name in stations.station_name.sort_values().unique():
@@ -104,36 +97,44 @@ def update_plot(hover):
 
 @app.callback(Output(component_id='locations', component_property='figure'),
               [Input(component_id='time-slider', component_property='value')])
-def update_plot(value):
-    values = df.merge(stations[stations.index == stations.index[value]], left_on='id', right_on='station_name')
-    data = [
-        go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100, zmin=0, zmax=10,
-                         colorscale='Blues'),
+def update_map(value):
+
+    return go.Figure([
+
+        go.Densitymapbox(
+            lat=lat,
+            lon=lon,
+            z=df.merge(stations[stations.index == stations.index[value]],
+                       left_on='id',
+                       right_on='station_name',
+                       how='left').Rain,
+            radius=100,
+            zmin=0,
+            zmax=10,
+            colorscale='Blues'),
+
         go.Scattermapbox(
             lat=lat,
             lon=lon,
             hovertext=df['Name'],
             hoverinfo='text',
             ids=df['id'],
-            marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']),
+            marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']),
             text=df['Name'],
             textposition='top center',
             mode='markers+text'
         ),
 
-    ]
-
-    return go.Figure(data, layout)
+    ], layout)
 
 @app.callback(Output(component_id='time-slider', component_property='value'),
               [Input(component_id='rainfall', component_property='hoverData')])
 def update_plot(hover):
-
     if hover:
-        t = pd.to_datetime(hover['points'][0]['x'])
-        return stations.index.unique().tolist().index(t)
+        return stations.index.unique().tolist().index(pd.to_datetime(hover['points'][0]['x']))
     else:
         return 0
+
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8889, host='0.0.0.0')
