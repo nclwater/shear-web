@@ -32,7 +32,10 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-children = [dcc.Graph(id='rainfall')]
+children = [dcc.Dropdown(options=[dict(label='Hourly', value='1H'),
+                                  dict(label='Daily', value='1D'),
+                                  dict(label='Monthly', value='1M')],
+                         id='interval', value='1H'), dcc.Graph(id='rainfall')]
 
 df = gpd.read_file('../rainfall_data/station_locations.geojson').sort_values('Name')
 
@@ -81,13 +84,16 @@ children.append(locations_graph)
 
 app.layout = html.Div(children=children)
 
+
 @app.callback(Output(component_id='rainfall', component_property='figure'),
-              [Input(component_id='locations', component_property='hoverData')])
-def update_lines(hover):
+              [Input(component_id='locations', component_property='hoverData'),
+               Input(component_id='interval', component_property='value')])
+def update_lines(hover, interval):
 
     traces = []
     for name in stations.station_name.sort_values().unique():
-        s = stations[stations.station_name == name].sort_index()
+        s = stations[stations.station_name == name].sort_index().resample(interval).sum()
+
         traces.append({
             'x': s.index, 'y': s['Rain'].values,
             'type': 'line', 'name': name,
@@ -95,28 +101,36 @@ def update_lines(hover):
 
     return {'data': traces, 'layout': dict(hovermode='closest', uirevision=True)}
 
-@app.callback(Output(component_id='locations', component_property='figure'),
-              [Input(component_id='time-slider', component_property='value')])
-def update_map(value):
 
+@app.callback(Output(component_id='locations', component_property='figure'),
+              [Input(component_id='time-slider', component_property='value'),
+               Input(component_id='interval', component_property='value')])
+def update_map(value, interval):
+    s = stations.groupby(['station_name', pd.Grouper(freq=interval)]).sum().reset_index().set_index('level_1')
+    times = get_times(interval)
+
+    max_values = {'1H': 50, '1D': 80, '1M': 300}
+    merged = df.merge(s[s.index == times[value]], left_on='id', right_on='station_name', how='left')
+    import math
     return go.Figure([
 
         go.Densitymapbox(
             lat=lat,
             lon=lon,
-            z=df.merge(stations[stations.index == stations.index[value]],
-                       left_on='id',
-                       right_on='station_name',
-                       how='left').Rain,
+            z=merged.Rain,
             radius=100,
             zmin=0,
-            zmax=10,
-            colorscale='Blues'),
+            zmax=max_values[interval],
+            colorscale='Blues'
+        ),
 
         go.Scattermapbox(
             lat=lat,
             lon=lon,
-            hovertext=df['Name'],
+            hovertext=merged.apply(lambda row: '<b>{}</b><br>{}'.format(
+                row.Name, '{} mm at {}'.format(round(row.Rain, 1), times[value])
+                if not math.isnan(row.Rain) else 'No Data'),
+                axis=1),
             hoverinfo='text',
             ids=df['id'],
             marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']),
@@ -127,13 +141,27 @@ def update_map(value):
 
     ], layout)
 
+
 @app.callback(Output(component_id='time-slider', component_property='value'),
-              [Input(component_id='rainfall', component_property='hoverData')])
-def update_plot(hover):
+              [Input(component_id='rainfall', component_property='hoverData'),
+               Input(component_id='interval', component_property='value')])
+def update_slider_value(hover, interval):
     if hover:
-        return stations.index.unique().tolist().index(pd.to_datetime(hover['points'][0]['x']))
+        times = get_times(interval)
+        time = pd.to_datetime(hover['points'][0]['x'])
+        return times.get_loc(time, method='nearest')
     else:
         return 0
+
+
+@app.callback(Output(component_id='time-slider', component_property='max'),
+              [Input(component_id='interval', component_property='value')])
+def update_slider_max(interval):
+    return len(get_times(interval))
+
+
+def get_times(interval):
+    return stations.resample(interval).sum().index
 
 
 if __name__ == '__main__':
