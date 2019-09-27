@@ -144,7 +144,7 @@ def update_plot(threshold, rain, dur, green, bm, dens, build):
         traces = list()
 
         traces.append(
-            go.Choroplethmapbox(geojson=features.__geo_interface__,
+            go.Choroplethmapbox(geojson=features.geometry.__geo_interface__,
                                 locations=features.index,
                                 z=features.threshold,
                                 showscale=False,
@@ -161,7 +161,7 @@ def update_plot(threshold, rain, dur, green, bm, dens, build):
             if build:
 
                 t = go.Choroplethmapbox(
-                    geojson=buildings_above_threshold.__geo_interface__,
+                    geojson=buildings_above_threshold.geometry.__geo_interface__,
                     locations=buildings_above_threshold.index,
                     z=depth_values[depth_values >= thresh],
                     below=''
