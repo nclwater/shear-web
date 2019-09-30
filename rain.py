@@ -23,8 +23,9 @@ stations = stations.set_index(pd.to_datetime(stations['Date Time'], format="%d/%
 numeric_cols = ['Wind Speed', 'Rain']
 stations[numeric_cols] = stations[numeric_cols].apply(pd.to_numeric)
 new_index = pd.np.array(stations.index)
-new_index[stations.station_name == 'ACTogether-HQ'] = new_index[stations.station_name == 'ACTogether-HQ'] \
-                                                      + pd.np.timedelta64(87, 'D')
+new_index[(stations.station_name == 'ACTogether-HQ') &
+          (stations.index < pd.datetime(day=31, month=7, year=2019))] += pd.np.timedelta64(87, 'D')
+
 stations = stations.set_index(new_index)
 stations = stations.drop_duplicates(subset=['Date Time', 'station_name'])
 
