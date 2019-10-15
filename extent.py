@@ -40,7 +40,10 @@ graph = dcc.Graph(
     figure=fig,
     clear_on_unhover=True,
     style={
-        'zIndex': -1}
+        'zIndex': -1,
+        'height': 'calc(100vh - 56px)',
+        'position': 'absolute'
+    }
 )
 
 
@@ -113,7 +116,7 @@ basemap_dropdown = html.Div(children=[
 slider_div = html.Div(children=[slider, rainfall_slider, duration_slider,
                                 html.Div(children=[green_areas_div, density_div, buildings_div, basemap_dropdown],
                                          style={'textAlign': 'center'})],
-                      style={'margin': 50, })
+                      style={'margin': 50, 'position': 'absolute'})
 
 children.append(slider_div)
 children.append(graph)
