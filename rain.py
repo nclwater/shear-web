@@ -20,7 +20,7 @@ paths = [p for p in os.listdir(folder) if p.endswith('.txt')]
 for locations_graph in paths:
 
     station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]], header=[0, 1],
-                        na_values='---')
+                        dayfirst=True, na_values='---')
     station = station.drop_duplicates(station.columns[0]).set_index(station.columns[0]).sort_index()
     station.index.name = 'time'
     station.columns = [' '.join([c.strip() for c in col if 'Unnamed' not in c]).lower() for col in station.columns]
