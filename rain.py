@@ -72,6 +72,8 @@ data = [
 ]
 layout = go.Layout(
     hovermode='closest',
+    margin=go.layout.Margin(l=0, r=0, b=0, t=0),
+    height=300,
     uirevision=True,
     mapbox=go.layout.Mapbox(
         accesstoken=token,
@@ -118,7 +120,11 @@ def update_lines(hover, interval, variable):
             'type': 'line', 'name': name,
             'visible': (True if name == hover['points'][0]['id'] else 'legendonly') if hover else True})
 
-    return {'data': traces, 'layout': dict(hovermode='closest', uirevision=True)}
+    return {'data': traces, 'layout': dict(hovermode='closest',
+                                           uirevision=True,
+                                           # height=300,
+                                           margin=go.layout.Margin(l=20, r=0, b=0, t=20)
+                                           )}
 
 
 @app.callback(Output(component_id='locations', component_property='figure'),
