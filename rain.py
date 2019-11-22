@@ -12,16 +12,23 @@ stations = pd.DataFrame()
 folder = '../rainfall_data'
 paths = [p for p in os.listdir(folder) if p.endswith('.txt')]
 for locations_graph in paths:
-    station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]])
-    station.columns = [c + ' ' if 'Unnamed' not in c else '' for c in station.columns]
-    station.columns = station.columns + station.iloc[0]
-    station = station.drop(0)
-    station['station_name'] = locations_graph[:-4]
+    # station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]])
+    # station.columns = [c + ' ' if 'Unnamed' not in c else '' for c in station.columns]
+    # station.columns = station.columns + station.iloc[0]
+    # station = station.drop(0)
+    # station['station_name'] = locations_graph[:-4]
+
+    station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]], header=[0, 1])
+    station = station.set_index(station.columns[0]).sort_index()
+    station.index.name = None
+    station.columns = [' '.join([c.strip() for c in col if 'Unnamed' not in c]).lower() for col in station.columns]
+    station.columns = [col.replace(' ', '_').replace('.', '') for col in station.columns]
+
     stations = pd.concat([stations, station])
 
 stations = stations.set_index(pd.to_datetime(stations['Date Time'], format="%d/%m/%y %H:%M", errors='coerce'))
-numeric_cols = ['Wind Speed', 'Rain']
-stations[numeric_cols] = stations[numeric_cols].apply(pd.to_numeric)
+numeric_cols = ['wind_speed', 'rain', 'temperature']
+# stations[numeric_cols] = stations[numeric_cols].apply(pd.to_numeric)
 new_index = pd.np.array(stations.index)
 new_index[(stations.station_name == 'ACTogether-HQ') &
           (stations.index < pd.datetime(day=31, month=7, year=2019))] += pd.np.timedelta64(87, 'D')
@@ -45,7 +52,7 @@ lon = df.geometry.x
 values = df.merge(stations[stations.index == stations.index[100]], left_on='id', right_on='station_name')
 
 data = [
-    go.Densitymapbox(lat=lat, lon=lon, z=values.Rain, radius=100),
+    go.Densitymapbox(lat=lat, lon=lon, z=values.rain, radius=100),
     go.Scattermapbox(
         lat=lat,
         lon=lon,
@@ -53,7 +60,7 @@ data = [
         hoverinfo='text',
         ids=df['id'],
         marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']),
-        # z=values.Rain, radius=10
+        # z=values.rain, radius=10
     ),
 
 ]
@@ -96,7 +103,7 @@ def update_lines(hover, interval):
         s = stations[stations.station_name == name].sort_index().resample(interval).sum()
 
         traces.append({
-            'x': s.index, 'y': s['Rain'].values,
+            'x': s.index, 'y': s.rain.values,
             'type': 'line', 'name': name,
             'visible': (True if name == hover['points'][0]['id'] else 'legendonly') if hover else True})
 
@@ -118,7 +125,7 @@ def update_map(value, interval):
         go.Densitymapbox(
             lat=lat,
             lon=lon,
-            z=merged.Rain,
+            z=merged.rain,
             radius=100,
             zmin=0,
             zmax=max_values[interval],
@@ -129,8 +136,8 @@ def update_map(value, interval):
             lat=lat,
             lon=lon,
             hovertext=merged.apply(lambda row: '<b>{}</b><br>{}'.format(
-                row.Name, '{} mm at {}'.format(round(row.Rain, 1), times[value])
-                if not math.isnan(row.Rain) else 'No Data'),
+                row.Name, '{} mm at {}'.format(round(row.rain, 1), times[value])
+                if not math.isnan(row.rain) else 'No Data'),
                 axis=1),
             hoverinfo='text',
             ids=df['id'],
