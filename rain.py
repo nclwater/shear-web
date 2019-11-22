@@ -18,10 +18,6 @@ token = 'pk.eyJ1IjoiZm1jY2xlYW4iLCJhIjoiY2swbWpkcXY2MTRhNTNjcHBvM3R2Z2J6MiJ9.zOe
 stations = pd.DataFrame()
 paths = [p for p in os.listdir(folder) if p.endswith('.txt')]
 for locations_graph in paths:
-    # station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]])
-    # station.columns = [c + ' ' if 'Unnamed' not in c else '' for c in station.columns]
-    # station.columns = station.columns + station.iloc[0]
-    # station = station.drop(0)
 
     station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]], header=[0, 1])
     station = station.drop_duplicates(station.columns[0]).set_index(station.columns[0]).sort_index()
@@ -32,15 +28,14 @@ for locations_graph in paths:
 
     stations = pd.concat([stations, station])
 
-# stations = stations.set_index(pd.to_datetime(stations['date_time'], format="%d/%m/%y %H:%M", errors='coerce'))
 numeric_cols = ['wind_speed', 'rain', 'temperature']
-# stations[numeric_cols] = stations[numeric_cols].apply(pd.to_numeric)
+
 new_index = pd.np.array(stations.index)
 new_index[(stations.station_name == 'ACTogether-HQ') &
           (stations.index < pd.datetime(day=31, month=7, year=2019))] += pd.np.timedelta64(87, 'D')
 
 stations = stations.set_index(new_index)
-# stations = stations.drop_duplicates(subset=['time', 'station_name'])
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -49,7 +44,10 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 children = [dcc.Dropdown(options=[dict(label='Hourly', value='1H'),
                                   dict(label='Daily', value='1D'),
                                   dict(label='Monthly', value='1M')],
-                         id='interval', value='1H'), dcc.Graph(id='rainfall')]
+                         id='interval', value='1H'), dcc.Graph(id='rainfall'),
+            dcc.Dropdown(options=[dict(label='Rain (mm)', value='rain'),
+                                  dict(label='Wind Speed (km/h)', value='wind_speed')
+                                  ], id='variable')]
 
 df = gpd.read_file(os.path.join(folder, 'station_locations.geojson')).sort_values('Name')
 
