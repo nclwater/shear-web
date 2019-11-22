@@ -19,7 +19,8 @@ stations = pd.DataFrame()
 paths = [p for p in os.listdir(folder) if p.endswith('.txt')]
 for locations_graph in paths:
 
-    station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]], header=[0, 1])
+    station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]], header=[0, 1],
+                        na_values='---')
     station = station.drop_duplicates(station.columns[0]).set_index(station.columns[0]).sort_index()
     station.index.name = 'time'
     station.columns = [' '.join([c.strip() for c in col if 'Unnamed' not in c]).lower() for col in station.columns]
@@ -28,7 +29,7 @@ for locations_graph in paths:
 
     stations = pd.concat([stations, station])
 
-numeric_cols = ['wind_speed', 'rain', 'temperature']
+# numeric_cols = ['wind_speed', 'rain', 'temp']
 
 new_index = pd.np.array(stations.index)
 new_index[(stations.station_name == 'ACTogether-HQ') &
@@ -46,8 +47,9 @@ children = [dcc.Dropdown(options=[dict(label='Hourly', value='1H'),
                                   dict(label='Monthly', value='1M')],
                          id='interval', value='1H'), dcc.Graph(id='rainfall'),
             dcc.Dropdown(options=[dict(label='Rain (mm)', value='rain'),
-                                  dict(label='Wind Speed (km/h)', value='wind_speed')
-                                  ], id='variable')]
+                                  dict(label='Wind Speed (km/h)', value='wind_speed'),
+                                  dict(label='Temperature (C)', value='temp_out')
+                                  ], id='variable', value='rain')]
 
 df = gpd.read_file(os.path.join(folder, 'station_locations.geojson')).sort_values('Name')
 
@@ -99,15 +101,19 @@ app.layout = html.Div(children=children)
 
 @app.callback(Output(component_id='rainfall', component_property='figure'),
               [Input(component_id='locations', component_property='hoverData'),
-               Input(component_id='interval', component_property='value')])
-def update_lines(hover, interval):
+               Input(component_id='interval', component_property='value'),
+               Input(component_id='variable', component_property='value')])
+def update_lines(hover, interval, variable):
 
     traces = []
     for name in stations.station_name.sort_values().unique():
-        s = stations[stations.station_name == name].sort_index().resample(interval).sum()
-
+        s = stations[stations.station_name == name].sort_index()[variable].resample(interval)
+        if variable == 'temp_out':
+            s = s.mean()
+        else:
+            s = s.sum()
         traces.append({
-            'x': s.index, 'y': s.rain.values,
+            'x': s.index, 'y': s.values,
             'type': 'line', 'name': name,
             'visible': (True if name == hover['points'][0]['id'] else 'legendonly') if hover else True})
 
@@ -116,12 +122,16 @@ def update_lines(hover, interval):
 
 @app.callback(Output(component_id='locations', component_property='figure'),
               [Input(component_id='time-slider', component_property='value'),
-               Input(component_id='interval', component_property='value')])
-def update_map(value, interval):
+               Input(component_id='interval', component_property='value'),
+               Input(component_id='variable', component_property='value')])
+def update_map(value, interval, variable):
     s = stations.groupby(['station_name', pd.Grouper(freq=interval)]).sum().reset_index().set_index('level_1')
     times = get_times(interval)
-
-    max_values = {'1H': 50, '1D': 80, '1M': 300}
+    max_values = {
+        'rain': {'1H': 50, '1D': 80, '1M': 300},
+        'wind_speed': {'1H': 6, '1D': 6*24, '1M': 6*24*30},
+        'temp_out': {'1H': 30, '1D': 30, '1M': 30}
+    }
     merged = df.merge(s[s.index == times[value]], left_on='id', right_on='station_name', how='left')
     import math
     return go.Figure([
@@ -129,10 +139,10 @@ def update_map(value, interval):
         go.Densitymapbox(
             lat=lat,
             lon=lon,
-            z=merged.rain,
+            z=merged[variable],
             radius=100,
             zmin=0,
-            zmax=max_values[interval],
+            zmax=max_values[variable][interval],
             colorscale='Blues'
         ),
 
@@ -140,8 +150,8 @@ def update_map(value, interval):
             lat=lat,
             lon=lon,
             hovertext=merged.apply(lambda row: '<b>{}</b><br>{}'.format(
-                row.Name, '{} mm at {}'.format(round(row.rain, 1), times[value])
-                if not math.isnan(row.rain) else 'No Data'),
+                row.Name, '{} mm at {}'.format(round(row[variable], 1), times[value])
+                if not math.isnan(row[variable]) else 'No Data'),
                 axis=1),
             hoverinfo='text',
             ids=df['id'],
