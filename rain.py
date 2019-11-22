@@ -186,5 +186,37 @@ def get_times(interval):
     return stations.resample(interval).sum().index
 
 
+# @app.callback(Output('download-link', 'href'),
+#               [Input('dropdown', 'value')])
+# def update_href(dropdown_value):
+#     df = pd.DataFrame({dropdown_value: [1, 2, 3]})
+#     relative_filename = os.path.join(
+#         'downloads',
+#         '{}-download.xlsx'.format(dropdown_value)
+#     )
+#     absolute_filename = os.path.join(os.getcwd(), relative_filename)
+#     writer = pd.ExcelWriter(absolute_filename)
+#     df.to_excel(writer, 'Sheet1')
+#     writer.save()
+#     return '/{}'.format(relative_filename)
+
+
+@app.server.route('/<variable>/<frequency>')
+def serve_static(variable, frequency):
+    import flask
+    import io
+    csv = io.StringIO()
+    stations.pivot(columns='station_name', values=variable).resample(frequency).sum().to_csv(csv)
+
+    mem = io.BytesIO()
+    mem.write(csv.getvalue().encode('utf-8'))
+    mem.seek(0)
+
+    return flask.send_file(mem,
+                           mimetype='text/csv',
+                           attachment_filename='shear-data.csv',
+                           as_attachment=True)
+
+
 if __name__ == '__main__':
     app.run_server(debug=True, port=8889, host='0.0.0.0')
