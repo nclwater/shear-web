@@ -30,7 +30,7 @@ layout = go.Layout(
             lat=e.geometry.centroid.y.mean(),
             lon=e.geometry.centroid.x.mean()
         ),
-        zoom=10
+        zoom=11
     )
 )
 fig = go.Figure(go.Choroplethmapbox(), layout)
@@ -40,9 +40,8 @@ graph = dcc.Graph(
     figure=fig,
     clear_on_unhover=True,
     style={
-        'zIndex': -1,
-        'height': 'calc(100vh - 56px)',
-        'position': 'absolute'
+        'zIndex': 10,
+        'flexGrow':1
     }
 )
 
@@ -68,7 +67,12 @@ def create_slider(title, name, marks):
                 updatemode='drag'
             )
         ],
-        style={'margin': 40}
+        style={
+            'margin': 40,
+            'marginTop': 0,
+            'marginBottom': 20,
+            'pointerEvents':'auto'
+        }, className="three columns"
     )
 
 
@@ -87,7 +91,6 @@ buildings_div = html.Div(buildings, style={'margin': 10, 'textAlign': 'center', 
 
 basemap_dropdown = html.Div(children=[
 
-    html.P('Base Map: '),
     dcc.Dropdown(
         id='basemap',
         options=[
@@ -109,20 +112,28 @@ basemap_dropdown = html.Div(children=[
                 "stamen-watercolor"
             ]
         ],
-        value='basic', style={'width': 200, 'margin': 10}),
+        value='basic', style={'width': 150, 'height': '1.1em'}),
 
 ], style={'display': 'inline-block'})
 
-slider_div = html.Div(children=[slider, rainfall_slider, duration_slider,
-                                html.Div(children=[green_areas_div, density_div, buildings_div, basemap_dropdown],
-                                         style={'textAlign': 'center'})],
-                      style={'margin': 50, 'position': 'absolute'})
+controls = html.Div(id='controls', children=[slider, rainfall_slider, duration_slider,
+                                             html.Div(children=[green_areas_div, density_div, buildings_div, basemap_dropdown],
+                                         style={'textAlign': 'center', 'pointerEvents':'auto'})],
+                    style={
+                          'margin': 5,
+                          'pointerEvents': 'none',
+                        'zIndex': '20'
+                      })
 
-children.append(slider_div)
+children.append(controls)
 children.append(graph)
-children.append(html.Div(id='layout', children=['']))
 
-app.layout = html.Div(children=children)
+app.layout = html.Div(children=children, style={
+    'height': 'calc(100vh - 56px)',
+    'display': 'flex',
+    'flexDirection':'column',
+    'zIndex': -10
+})
 
 
 @app.callback(Output(component_id='map', component_property='figure'),
@@ -187,15 +198,6 @@ def update_plot(threshold, rain, dur, green, bm, dens, build):
         return go.Figure(traces, layout.update(mapbox_style=bm))
     else:
         return fig
-
-@app.callback(Output('layout', 'children'),
-              [Input('map', 'relayoutData')])
-def show_layout(lay):
-    if lay is not None:
-        if 'mapbox.zoom' in lay:
-            return [str(lay['mapbox.zoom'])]
-        else:
-            return []
 
 
 if __name__ == '__main__':
