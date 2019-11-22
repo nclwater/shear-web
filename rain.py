@@ -95,6 +95,7 @@ slider = dcc.Slider(id='time-slider',
 
 children.append(slider)
 children.append(locations_graph)
+children.append(html.A(id='download-link', children='Download Data'))
 
 app.layout = html.Div(children=children)
 
@@ -186,19 +187,13 @@ def get_times(interval):
     return stations.resample(interval).sum().index
 
 
-# @app.callback(Output('download-link', 'href'),
-#               [Input('dropdown', 'value')])
-# def update_href(dropdown_value):
-#     df = pd.DataFrame({dropdown_value: [1, 2, 3]})
-#     relative_filename = os.path.join(
-#         'downloads',
-#         '{}-download.xlsx'.format(dropdown_value)
-#     )
-#     absolute_filename = os.path.join(os.getcwd(), relative_filename)
-#     writer = pd.ExcelWriter(absolute_filename)
-#     df.to_excel(writer, 'Sheet1')
-#     writer.save()
-#     return '/{}'.format(relative_filename)
+@app.callback(Output('download-link', 'href'),
+              [
+                  Input(component_id='interval', component_property='value'),
+                  Input(component_id='variable', component_property='value')
+               ])
+def update_href(interval, variable):
+    return '/{}/{}'.format(variable, interval)
 
 
 @app.server.route('/<variable>/<frequency>')
@@ -214,7 +209,7 @@ def serve_static(variable, frequency):
 
     return flask.send_file(mem,
                            mimetype='text/csv',
-                           attachment_filename='shear-data.csv',
+                           attachment_filename='shear-{}.csv'.format(variable),
                            as_attachment=True)
 
 
