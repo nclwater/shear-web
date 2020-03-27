@@ -1,0 +1,4 @@
+dependencies:
+  - geopandas
+  - pip:
+      - dash
