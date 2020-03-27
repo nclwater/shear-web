@@ -5,7 +5,7 @@ import geopandas as gpd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 
-df = gpd.read_file('extents_4326_simple.gpkg')
+df = gpd.read_file('extents.gpkg')
 df.duration = (df.duration / 3600).astype(int)
 
 
@@ -17,7 +17,7 @@ children = [html.H1(children=''),  html.Div(children='')]
 
 e = df[(df.threshold == df.threshold[0]) & (df.run_id == df.run_id[0])]
 
-building_depths = gpd.read_file('building_depths_with_green_areas_thresholded_4326.gpkg')
+building_depths = gpd.read_file('building_depths.gpkg')
 
 layout = go.Layout(
     hovermode='closest',
@@ -201,4 +201,4 @@ def update_plot(threshold, rain, dur, green, bm, dens, build):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8899, host='0.0.0.0')
+    app.run_server(debug=True, port=8899)
