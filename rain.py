@@ -123,7 +123,7 @@ def update_lines(hover, interval, variable):
     return {'data': traces, 'layout': dict(hovermode='closest',
                                            uirevision=True,
                                            # height=300,
-                                           margin=go.layout.Margin(l=20, r=0, b=0, t=20)
+                                           margin=go.layout.Margin(l=20, r=0, b=20, t=20)
                                            )}
 
 
