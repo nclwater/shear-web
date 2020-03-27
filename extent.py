@@ -40,8 +40,7 @@ graph = dcc.Graph(
     figure=fig,
     clear_on_unhover=True,
     style={
-        'zIndex': 10,
-        'flexGrow':1
+        'height': '70%'
     }
 )
 
@@ -128,12 +127,7 @@ controls = html.Div(id='controls', children=[slider, rainfall_slider, duration_s
 children.append(controls)
 children.append(graph)
 
-app.layout = html.Div(children=children, style={
-    'height': 'calc(100vh - 56px)',
-    'display': 'flex',
-    'flexDirection':'column',
-    'zIndex': -10
-})
+app.layout = html.Div(children=children, className='main')
 
 
 @app.callback(Output(component_id='map', component_property='figure'),
