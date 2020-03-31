@@ -4,6 +4,7 @@ import dash_html_components as html
 import geopandas as gpd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
+import os
 
 df = gpd.read_file('extents.gpkg')
 df.duration = (df.duration / 3600).astype(int)
@@ -24,7 +25,7 @@ layout = go.Layout(
     margin=go.layout.Margin(l=0, r=0, b=0, t=0),
     mapbox_style="basic",
     uirevision=True,
-    mapbox_accesstoken='pk.eyJ1IjoiZm1jY2xlYW4iLCJhIjoiY2swbWpkcXY2MTRhNTNjcHBvM3R2Z2J6MiJ9.zOehGKT1N3eask9zsKmQqA',
+    mapbox_accesstoken=os.environ['MAPBOX_ACCESS_TOKEN'],
     mapbox=go.layout.Mapbox(
         center=go.layout.mapbox.Center(
             lat=e.geometry.centroid.y.mean(),
@@ -33,7 +34,7 @@ layout = go.Layout(
         zoom=11
     )
 )
-fig = go.Figure(go.Choroplethmapbox(), layout)
+fig = go.Figure([go.Choroplethmapbox(), go.Densitymapbox()], layout)
 
 graph = dcc.Graph(
     id='map',
@@ -128,7 +129,7 @@ children.append(controls)
 children.append(graph)
 
 app.layout = html.Div(children=children, className='main')
-
+below = ''
 
 @app.callback(Output(component_id='map', component_property='figure'),
               [Input(component_id='threshold-slider', component_property='value'),
@@ -140,58 +141,58 @@ app.layout = html.Div(children=children, className='main')
                Input(component_id='buildings', component_property='value'),
                ])
 def update_plot(threshold, rain, dur, green, bm, dens, build):
-    if threshold is not None and rain is not None and dur is not None:
 
-        green = 1 if green else 0
+    # if threshold is not None and rain is not None and dur is not None:
 
-        features = df[(df.threshold == float(threshold_marks[threshold])) &
-                      (df.rainfall == float(rainfall_marks[rain])) &
-                      (df.duration == float(duration_marks[dur])) &
-                      (df.green == green)]
+    green = 1 if green else 0
 
-        traces = list()
+    features = df[(df.threshold == float(threshold_marks[threshold])) &
+                  (df.rainfall == float(rainfall_marks[rain])) &
+                  (df.duration == float(duration_marks[dur])) &
+                  (df.green == green)]
 
-        traces.append(
-            go.Choroplethmapbox(geojson=features.geometry.__geo_interface__,
-                                locations=features.index,
-                                z=features.threshold,
-                                showscale=False,
-                                colorscale=[[0, 'royalblue'], [1, 'royalblue']],
-                                marker=dict(opacity=0.5),
-                                hoverinfo='skip',
-                                below=''
-                                ))
-        if build or dens:
-            thresh = float(threshold_marks[threshold])
-            depth_values = building_depths['max_depth_{}'.format(features.run_id.iloc[0])]
-            buildings_above_threshold = building_depths[depth_values >= thresh]
+    traces = list()
 
-            if build:
+    traces.append(
+        go.Choroplethmapbox(geojson=features.geometry.__geo_interface__,
+                            locations=features.index,
+                            z=features.threshold,
+                            showscale=False,
+                            colorscale=[[0, 'royalblue'], [1, 'royalblue']],
+                            marker=dict(opacity=0.5),
+                            hoverinfo='skip',
+                            below=below
+                            ))
+    if build or dens:
+        thresh = float(threshold_marks[threshold])
+        depth_values = building_depths['max_depth_{}'.format(features.run_id.iloc[0])]
+        buildings_above_threshold = building_depths[depth_values >= thresh]
 
-                t = go.Choroplethmapbox(
-                    geojson=buildings_above_threshold.geometry.__geo_interface__,
-                    locations=buildings_above_threshold.index,
-                    z=depth_values[depth_values >= thresh],
-                    below=''
-                )
-                traces.append(t)
-            else:
-                traces.append(go.Choroplethmapbox())
+        if build:
 
-            if dens:
-                traces.append(go.Densitymapbox(lat=buildings_above_threshold.y,
-                                               lon=buildings_above_threshold.x,
-                                               z=depth_values[depth_values >= thresh],
-                                               radius=10,
-                                               hoverinfo='skip',
-                                               showscale=True if not build else False
-                                               ))
-            else:
-                traces.append(go.Densitymapbox())
+            t = go.Choroplethmapbox(
+                geojson=buildings_above_threshold.geometry.__geo_interface__,
+                locations=buildings_above_threshold.index,
+                z=depth_values[depth_values >= thresh],
+                below=below
+            )
+            traces.append(t)
+        else:
+            traces.append(go.Choroplethmapbox())
 
-        return go.Figure(traces, layout.update(mapbox_style=bm))
-    else:
-        return fig
+        if dens:
+            traces.append(go.Densitymapbox(lat=buildings_above_threshold.y,
+                                           lon=buildings_above_threshold.x,
+                                           z=depth_values[depth_values >= thresh],
+                                           radius=10,
+                                           hoverinfo='skip',
+                                           showscale=True if not build else False,
+                                           below=below
+                                           ))
+        else:
+            traces.append(go.Densitymapbox())
+
+    return go.Figure(traces, layout.update(mapbox_style=bm))
 
 
 if __name__ == '__main__':
