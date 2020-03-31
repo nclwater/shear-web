@@ -14,8 +14,6 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-children = [html.H1(children=''),  html.Div(children='')]
-
 e = df[(df.threshold == df.threshold[0]) & (df.run_id == df.run_id[0])]
 
 building_depths = gpd.read_file('building_depths.gpkg')
@@ -71,7 +69,7 @@ def create_slider(title, name, marks):
             'margin': 40,
             'marginTop': 0,
             'marginBottom': 20,
-            'pointerEvents':'auto'
+            'pointerEvents': 'auto'
         }, className="three columns"
     )
 
@@ -116,20 +114,22 @@ basemap_dropdown = html.Div(children=[
 
 ], style={'display': 'inline-block'})
 
-controls = html.Div(id='controls', children=[slider, rainfall_slider, duration_slider,
-                                             html.Div(children=[green_areas_div, density_div, buildings_div, basemap_dropdown],
-                                         style={'textAlign': 'center', 'pointerEvents':'auto'})],
+controls = html.Div(id='controls',
+                    children=[
+                        slider,
+                        rainfall_slider,
+                        duration_slider,
+                        html.Div(children=[green_areas_div, density_div, buildings_div, basemap_dropdown],
+                                 style={'textAlign': 'center', 'pointerEvents': 'auto'})],
                     style={
-                          'margin': 5,
-                          'pointerEvents': 'none',
+                        'margin': 5,
+                        'pointerEvents': 'none',
                         'zIndex': '20'
                       })
 
-children.append(controls)
-children.append(graph)
-
-app.layout = html.Div(children=children, className='main')
+app.layout = html.Div(children=[controls, graph], className='main')
 below = ''
+
 
 @app.callback(Output(component_id='map', component_property='figure'),
               [Input(component_id='threshold-slider', component_property='value'),
