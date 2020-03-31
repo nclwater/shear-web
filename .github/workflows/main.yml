@@ -1,5 +1,7 @@
 name: tests
 on: [push]
+env:
+  MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
 
 
 jobs:
@@ -16,5 +18,3 @@ jobs:
       - name: run tests
         run: '%CONDA%\Scripts\activate.bat shear-web & python -m unittest discover'
         shell: cmd
-        env:
-          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
