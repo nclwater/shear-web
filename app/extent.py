@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 import os
 
-df = gpd.read_file('extents.gpkg')
+df = gpd.read_file('data/extents.gpkg')
 df.duration = (df.duration / 3600).astype(int)
 
 
@@ -16,7 +16,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 e = df[(df.threshold == df.threshold[0]) & (df.run_id == df.run_id[0])]
 
-building_depths = gpd.read_file('building_depths.gpkg')
+building_depths = gpd.read_file('data/building_depths.gpkg')
 
 layout = go.Layout(
     hovermode='closest',
@@ -141,8 +141,6 @@ below = ''
                Input(component_id='buildings', component_property='value'),
                ])
 def update_plot(threshold, rain, dur, green, bm, dens, build):
-
-    # if threshold is not None and rain is not None and dur is not None:
 
     green = 1 if green else 0
 
