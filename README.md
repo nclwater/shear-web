@@ -1,7 +1,7 @@
 # Kampala Flood Risk and Rainfall Data Dashboard
 
 ## Tests
-![](https://github.com/actions/hello-world/workflows/tests/badge.svg)
+![](https://github.com/fmcclean/shear-web/workflows/tests/badge.svg)
 
 `python -m unittest discover`
 
