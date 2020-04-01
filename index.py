@@ -3,7 +3,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from apps import extent, rain
+from apps import flood, rain
 
 
 app.layout = html.Div([
@@ -15,8 +15,8 @@ app.layout = html.Div([
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/extent':
-        return extent.layout
+    if pathname == '/flood':
+        return flood.layout
     elif pathname == '/rain':
         return rain.layout
     else:
