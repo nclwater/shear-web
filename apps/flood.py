@@ -122,7 +122,10 @@ controls = html.Div(id='controls',
                         'zIndex': '20'
                       })
 
-layout = html.Div(children=[controls, graph], className='main')
+def layout(navbar):
+    return html.Div(children=[navbar, controls, graph], className='main')
+
+
 below = ''
 
 

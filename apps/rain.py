@@ -93,7 +93,8 @@ children.append(slider)
 children.append(locations_graph)
 children.append(html.A(id='download-link', children='Download Data'))
 
-layout = html.Div(children=children)
+def layout(navbar):
+    return html.Div(children=[navbar] + children)
 
 
 @app.callback(Output(component_id='rainfall', component_property='figure'),

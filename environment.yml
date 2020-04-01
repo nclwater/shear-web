@@ -4,3 +4,4 @@ dependencies:
   - pip
   - pip:
     - dash==1.9.1
+    - dash-bootstrap-components==0.9.1
