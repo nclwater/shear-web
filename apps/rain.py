@@ -7,12 +7,7 @@ import geopandas as gpd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 
-import sys
-
-if len(sys.argv) > 1:
-    folder = sys.argv[1]
-else:
-    folder = '../rainfall_data'
+folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data/rainfall'))
 
 stations = pd.DataFrame()
 paths = [p for p in os.listdir(folder) if p.endswith('.txt')]
@@ -94,7 +89,8 @@ children.append(locations_graph)
 children.append(html.A(id='download-link', children='Download Data'))
 
 def layout(navbar):
-    return html.Div(children=[navbar] + children)
+    l = html.Div(children=[navbar] + children)
+    return l
 
 
 @app.callback(Output(component_id='rainfall', component_property='figure'),
@@ -115,7 +111,7 @@ def update_lines(hover, interval, variable):
             'type': 'line', 'name': name,
             'visible': (True if name == hover['points'][0]['id'] else 'legendonly') if hover else True})
 
-    return {'data': traces, 'locations_layout': dict(hovermode='closest',
+    return {'data': traces, 'layout': dict(hovermode='closest',
                                            uirevision=True,
                                            # height=300,
                                            margin=go.layout.Margin(l=20, r=0, b=20, t=20)
