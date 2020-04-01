@@ -4,5 +4,13 @@
 }
 
 .weather-dropdowns {
-    display: inline-block;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+}
+
+
+.weather-dropdowns .dropdown {
+    width: 200px;
+    padding: 10px;
 }

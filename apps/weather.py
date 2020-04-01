@@ -33,17 +33,19 @@ stations = stations.set_index(new_index)
 
 children = [
     html.Div(children=[
-        dcc.Dropdown(options=[
+        html.Div(
+            dcc.Dropdown(options=[
             dict(label='Hourly',  value='1H'),
             dict(label='Daily', value='1D'),
             dict(label='Monthly', value='1M')],
-            id='interval', value='1H'),
+            id='interval', value='1H', className='dropdown'),
+        ),
 
         dcc.Dropdown(options=[
                 dict(label='Rain (mm)', value='rain'),
                 dict(label='Wind Speed (km/h)', value='wind_speed'),
                 dict(label='Temperature (C)', value='temp_out')
-            ], id='variable', value='rain')
+            ], id='variable', value='rain', className='dropdown')
     ], className='weather-dropdowns'),
 
     dcc.Loading(dcc.Graph(id='weather', style={'height': '100%'}), style={'height': '300px'}),
@@ -111,17 +113,16 @@ def update_lines(clicked_point, interval, variable):
             s = s.mean()
         else:
             s = s.sum()
-        traces.append({
-            'x': s.index, 'y': s.values,
-            'type': 'line', 'name': name,
-            'visible': (True if name == clicked_point['points'][0]['id'] else 'legendonly') if clicked_point else True})
+        traces.append(go.Scatter(
+            x=s.index, y=s.values,
+            name=name,
+            visible=(True if name == clicked_point['points'][0]['id'] else 'legendonly') if clicked_point else True)
+        )
 
-    return {'data': traces, 'layout': dict(hovermode='closest',
-                                           uirevision=True,
-                                           # height=300,
-                                           margin=go.layout.Margin(l=20, r=0, b=20, t=20)
-                                           )}
-
+    return go.Figure(data=traces, layout=go.Layout(
+        hovermode='closest',
+        uirevision=True,
+        margin=go.layout.Margin(l=20, r=0, b=20, t=20)))
 
 @app.callback(Output('download-link', 'href'),
               [
