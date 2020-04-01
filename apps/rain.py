@@ -1,4 +1,4 @@
-import dash
+from app import app
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
@@ -14,7 +14,6 @@ if len(sys.argv) > 1:
 else:
     folder = '../rainfall_data'
 
-token = 'pk.eyJ1IjoiZm1jY2xlYW4iLCJhIjoiY2swbWpkcXY2MTRhNTNjcHBvM3R2Z2J6MiJ9.zOehGKT1N3eask9zsKmQqA'
 stations = pd.DataFrame()
 paths = [p for p in os.listdir(folder) if p.endswith('.txt')]
 for locations_graph in paths:
@@ -36,11 +35,6 @@ new_index[(stations.station_name == 'ACTogether-HQ') &
           (stations.index < pd.datetime(day=31, month=7, year=2019))] += pd.np.timedelta64(87, 'D')
 
 stations = stations.set_index(new_index)
-
-
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 children = [dcc.Dropdown(options=[dict(label='Hourly', value='1H'),
                                   dict(label='Daily', value='1D'),
@@ -70,13 +64,13 @@ data = [
     ),
 
 ]
-layout = go.Layout(
+locations_layout = go.Layout(
     hovermode='closest',
     margin=go.layout.Margin(l=0, r=0, b=0, t=0),
     height=300,
     uirevision=True,
     mapbox=go.layout.Mapbox(
-        accesstoken=token,
+        accesstoken=os.environ['MAPBOX_ACCESS_TOKEN'],
         center=go.layout.mapbox.Center(
             lat=df.geometry.y.mean(),
             lon=df.geometry.x.mean()
@@ -84,7 +78,7 @@ layout = go.Layout(
         zoom=10
     )
 )
-locations_figure = go.Figure(data, layout)
+locations_figure = go.Figure(data, locations_layout)
 
 locations_graph = dcc.Graph(
     id='locations',
@@ -99,7 +93,7 @@ children.append(slider)
 children.append(locations_graph)
 children.append(html.A(id='download-link', children='Download Data'))
 
-app.layout = html.Div(children=children)
+layout = html.Div(children=children)
 
 
 @app.callback(Output(component_id='rainfall', component_property='figure'),
@@ -120,7 +114,7 @@ def update_lines(hover, interval, variable):
             'type': 'line', 'name': name,
             'visible': (True if name == hover['points'][0]['id'] else 'legendonly') if hover else True})
 
-    return {'data': traces, 'layout': dict(hovermode='closest',
+    return {'data': traces, 'locations_layout': dict(hovermode='closest',
                                            uirevision=True,
                                            # height=300,
                                            margin=go.layout.Margin(l=20, r=0, b=20, t=20)
@@ -168,7 +162,7 @@ def update_map(value, interval, variable):
             mode='markers+text'
         ),
 
-    ], layout)
+    ], locations_layout)
 
 
 @app.callback(Output(component_id='time-slider', component_property='value'),

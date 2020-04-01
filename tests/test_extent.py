@@ -1,5 +1,5 @@
 import unittest
-from app import extent
+from apps import extent
 
 
 class TestExtent(unittest.TestCase):

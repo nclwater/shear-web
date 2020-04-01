@@ -1,4 +1,4 @@
-import dash
+from app import app
 import dash_core_components as dcc
 import dash_html_components as html
 import geopandas as gpd
@@ -9,16 +9,11 @@ import os
 df = gpd.read_file(os.path.abspath(os.path.join(os.path.dirname(__file__), 'data/extents.gpkg')))
 df.duration = (df.duration / 3600).astype(int)
 
-
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
 e = df[(df.threshold == df.threshold[0]) & (df.run_id == df.run_id[0])]
 
 building_depths = gpd.read_file(os.path.abspath(os.path.join(os.path.dirname(__file__), 'data/building_depths.gpkg')))
 
-layout = go.Layout(
+figure_layout = go.Layout(
     hovermode='closest',
     margin=go.layout.Margin(l=0, r=0, b=0, t=0),
     mapbox_style="basic",
@@ -32,7 +27,7 @@ layout = go.Layout(
         zoom=11
     )
 )
-fig = go.Figure([go.Choroplethmapbox(), go.Densitymapbox()], layout)
+fig = go.Figure([go.Choroplethmapbox(), go.Densitymapbox()], figure_layout)
 
 graph = dcc.Graph(
     id='map',
@@ -127,7 +122,7 @@ controls = html.Div(id='controls',
                         'zIndex': '20'
                       })
 
-app.layout = html.Div(children=[controls, graph], className='main')
+layout = html.Div(children=[controls, graph], className='main')
 below = ''
 
 
@@ -191,8 +186,4 @@ def update_plot(threshold: int = 0, rain: int = 0, dur: int = 0,
         else:
             traces.append(go.Densitymapbox())
 
-    return go.Figure(traces, layout.update(mapbox_style=bm))
-
-
-if __name__ == '__main__':
-    app.run_server(debug=True, port=8899)
+    return go.Figure(traces, figure_layout.update(mapbox_style=bm))
