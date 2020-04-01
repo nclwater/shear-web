@@ -31,14 +31,24 @@ new_index[(stations.station_name == 'ACTogether-HQ') &
 
 stations = stations.set_index(new_index)
 
-children = [dcc.Dropdown(options=[dict(label='Hourly', value='1H'),
-                                  dict(label='Daily', value='1D'),
-                                  dict(label='Monthly', value='1M')],
-                         id='interval', value='1H'), dcc.Graph(id='weather'),
-            dcc.Dropdown(options=[dict(label='Rain (mm)', value='rain'),
-                                  dict(label='Wind Speed (km/h)', value='wind_speed'),
-                                  dict(label='Temperature (C)', value='temp_out')
-                                  ], id='variable', value='rain')]
+children = [
+    html.Div(children=[
+        dcc.Dropdown(options=[
+            dict(label='Hourly',  value='1H'),
+            dict(label='Daily', value='1D'),
+            dict(label='Monthly', value='1M')],
+            id='interval', value='1H'),
+
+        dcc.Dropdown(options=[
+                dict(label='Rain (mm)', value='rain'),
+                dict(label='Wind Speed (km/h)', value='wind_speed'),
+                dict(label='Temperature (C)', value='temp_out')
+            ], id='variable', value='rain')
+    ], className='weather-dropdowns'),
+
+    dcc.Loading(dcc.Graph(id='weather', style={'height': '100%'}), style={'height': '300px'}),
+
+]
 
 df = gpd.read_file(os.path.join(folder, 'station_locations.geojson')).sort_values('Name')
 
@@ -47,7 +57,6 @@ lon = df.geometry.x
 values = df.merge(stations[stations.index == stations.index[100]], left_on='id', right_on='station_name')
 
 data = [
-    go.Densitymapbox(lat=lat, lon=lon, z=values.rain, radius=100),
     go.Scattermapbox(
         lat=lat,
         lon=lon,
@@ -81,10 +90,6 @@ locations_graph = dcc.Graph(
     clear_on_unhover=True,
 )
 
-slider = dcc.Slider(id='time-slider',
-                    min=0, max=len(stations.index.unique()), value=0, updatemode='mouseup')
-
-children.append(slider)
 children.append(locations_graph)
 children.append(html.A(id='download-link', children='Download Data'))
 
@@ -94,10 +99,10 @@ def layout(navbar):
 
 
 @app.callback(Output(component_id='weather', component_property='figure'),
-              [Input(component_id='locations', component_property='hoverData'),
+              [Input(component_id='locations', component_property='clickData'),
                Input(component_id='interval', component_property='value'),
                Input(component_id='variable', component_property='value')])
-def update_lines(hover, interval, variable):
+def update_lines(clicked_point, interval, variable):
 
     traces = []
     for name in stations.station_name.sort_values().unique():
@@ -109,79 +114,13 @@ def update_lines(hover, interval, variable):
         traces.append({
             'x': s.index, 'y': s.values,
             'type': 'line', 'name': name,
-            'visible': (True if name == hover['points'][0]['id'] else 'legendonly') if hover else True})
+            'visible': (True if name == clicked_point['points'][0]['id'] else 'legendonly') if clicked_point else True})
 
     return {'data': traces, 'layout': dict(hovermode='closest',
                                            uirevision=True,
                                            # height=300,
                                            margin=go.layout.Margin(l=20, r=0, b=20, t=20)
                                            )}
-
-
-@app.callback(Output(component_id='locations', component_property='figure'),
-              [Input(component_id='time-slider', component_property='value'),
-               Input(component_id='interval', component_property='value'),
-               Input(component_id='variable', component_property='value')])
-def update_map(value, interval, variable):
-    s = stations.groupby(['station_name', pd.Grouper(freq=interval)]).sum().reset_index().set_index('level_1')
-    times = get_times(interval)
-    max_values = {
-        'rain': {'1H': 50, '1D': 80, '1M': 300},
-        'wind_speed': {'1H': 6, '1D': 6*24, '1M': 6*24*30},
-        'temp_out': {'1H': 30, '1D': 30, '1M': 30}
-    }
-    merged = df.merge(s[s.index == times[value]], left_on='id', right_on='station_name', how='left')
-    import math
-    return go.Figure([
-
-        go.Densitymapbox(
-            lat=lat,
-            lon=lon,
-            z=merged[variable],
-            radius=100,
-            zmin=0,
-            zmax=max_values[variable][interval],
-            colorscale='Blues'
-        ),
-
-        go.Scattermapbox(
-            lat=lat,
-            lon=lon,
-            hovertext=merged.apply(lambda row: '<b>{}</b><br>{}'.format(
-                row.Name, '{} mm at {}'.format(round(row[variable], 1), times[value])
-                if not math.isnan(row[variable]) else 'No Data'),
-                axis=1),
-            hoverinfo='text',
-            ids=df['id'],
-            marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']),
-            text=df['Name'],
-            textposition='top center',
-            mode='markers+text'
-        ),
-
-    ], locations_layout)
-
-
-@app.callback(Output(component_id='time-slider', component_property='value'),
-              [Input(component_id='weather', component_property='hoverData'),
-               Input(component_id='interval', component_property='value')])
-def update_slider_value(hover, interval):
-    if hover:
-        times = get_times(interval)
-        time = pd.to_datetime(hover['points'][0]['x'])
-        return times.get_loc(time, method='nearest')
-    else:
-        return 0
-
-
-@app.callback(Output(component_id='time-slider', component_property='max'),
-              [Input(component_id='interval', component_property='value')])
-def update_slider_max(interval):
-    return len(get_times(interval))
-
-
-def get_times(interval):
-    return stations.resample(interval).sum().index
 
 
 @app.callback(Output('download-link', 'href'),
@@ -208,7 +147,3 @@ def serve_static(variable, frequency):
                            mimetype='text/csv',
                            attachment_filename='shear-{}.csv'.format(variable),
                            as_attachment=True)
-
-
-if __name__ == '__main__':
-    app.run_server(debug=True, port=8889, host='0.0.0.0')
