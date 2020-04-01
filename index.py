@@ -15,7 +15,7 @@ navbar = dbc.NavbarSimple(
 )
 
 from app import app
-from apps import flood, rain
+from apps import flood, weather
 
 
 app.layout = html.Div([
@@ -30,7 +30,7 @@ def display_page(pathname):
     if pathname == '/flood':
         return flood.layout(navbar)
     elif pathname == '/rain':
-        return rain.layout(navbar)
+        return weather.layout(navbar)
     else:
         return '404'
 

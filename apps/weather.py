@@ -7,7 +7,7 @@ import geopandas as gpd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 
-folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data/rainfall'))
+folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data/weather'))
 
 stations = pd.DataFrame()
 paths = [p for p in os.listdir(folder) if p.endswith('.txt')]
@@ -34,7 +34,7 @@ stations = stations.set_index(new_index)
 children = [dcc.Dropdown(options=[dict(label='Hourly', value='1H'),
                                   dict(label='Daily', value='1D'),
                                   dict(label='Monthly', value='1M')],
-                         id='interval', value='1H'), dcc.Graph(id='rainfall'),
+                         id='interval', value='1H'), dcc.Graph(id='weather'),
             dcc.Dropdown(options=[dict(label='Rain (mm)', value='rain'),
                                   dict(label='Wind Speed (km/h)', value='wind_speed'),
                                   dict(label='Temperature (C)', value='temp_out')
@@ -93,7 +93,7 @@ def layout(navbar):
     return l
 
 
-@app.callback(Output(component_id='rainfall', component_property='figure'),
+@app.callback(Output(component_id='weather', component_property='figure'),
               [Input(component_id='locations', component_property='hoverData'),
                Input(component_id='interval', component_property='value'),
                Input(component_id='variable', component_property='value')])
@@ -163,7 +163,7 @@ def update_map(value, interval, variable):
 
 
 @app.callback(Output(component_id='time-slider', component_property='value'),
-              [Input(component_id='rainfall', component_property='hoverData'),
+              [Input(component_id='weather', component_property='hoverData'),
                Input(component_id='interval', component_property='value')])
 def update_slider_value(hover, interval):
     if hover:

@@ -2,7 +2,7 @@ import unittest
 from apps import flood
 
 
-class TestExtent(unittest.TestCase):
+class TestFlood(unittest.TestCase):
     def test_update_plot(self):
         flood.update_plot()
 

@@ -70,7 +70,7 @@ def create_slider(title, name, marks):
 
 
 slider = create_slider('Depth Threshold (m)', 'threshold-slider', threshold_marks)
-rainfall_slider = create_slider('Rainfall Amount (mm)', 'rainfall-slider', rainfall_marks)
+rainfall_slider = create_slider('Rainfall Amount (mm)', 'weather-slider', rainfall_marks)
 duration_slider = create_slider('Rainfall Duration (hrs)', 'duration-slider', marks=duration_marks)
 
 green_areas = dcc.Checklist(id='green-areas', options=[{'label': 'Green Areas', 'value': '-'}])
@@ -131,7 +131,7 @@ below = ''
 
 @app.callback(Output(component_id='map', component_property='figure'),
               [Input(component_id='threshold-slider', component_property='value'),
-               Input(component_id='rainfall-slider', component_property='value'),
+               Input(component_id='weather-slider', component_property='value'),
                Input(component_id='duration-slider', component_property='value'),
               Input(component_id='green-areas', component_property='value'),
                Input(component_id='basemap', component_property='value'),
