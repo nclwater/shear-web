@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink("Flooding", href="/flood")),
-        dbc.NavItem(dbc.NavLink("Rainfall", href="/rain")),
+        dbc.NavItem(dbc.NavLink("Weather", href="/weather")),
     ],
     brand="Kampala Flood Risk and Rainfall Data Dashboard",
     brand_href="#",
@@ -29,7 +29,7 @@ app.layout = html.Div([
 def display_page(pathname):
     if pathname == '/flood':
         return flood.layout(navbar)
-    elif pathname == '/rain':
+    elif pathname == '/weather':
         return weather.layout(navbar)
     else:
         return '404'
