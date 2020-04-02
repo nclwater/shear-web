@@ -6,7 +6,7 @@
 }
 
 .weather-dropdowns {
-    width: 100%;
+    flex: 1 1 0;
     padding: 10px;
 }
 
@@ -16,23 +16,36 @@
     padding-bottom: 10px;
 }
 
-#weather-container {
-    height: 50vh;
+#loading-container {
+    flex: 1.5;
+    min-height: 0;
+}
+
+#loading-container > div {
+    height: 100%
 }
 
 #weather {
-    height: 50vh;
+    height: 100%;
+    min-height: 0;
 }
 
 #locations {
     width: 100%;
+    height: 100%;
 
+}
+
+#locations-container {
+    flex: 1 1 0;
+    min-width: 0;
 }
 
 #map-and-dropdown-container {
     display: inline-flex;
     width: 100%;
-    height: calc(50vh - 70px);
+    flex: 1;
+    min-height: 0;
 
 }
 

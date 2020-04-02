@@ -74,9 +74,10 @@ locations_graph = dcc.Graph(
 
 children = [
 
-    html.Div(dcc.Loading(dcc.Graph(id='weather')), id='weather-container'),
+    html.Div(id='loading-container', children=[
+        dcc.Loading(dcc.Graph(id='weather'))]),
     html.Div(
-        [locations_graph,
+        [html.Div(locations_graph, id='locations-container'),
          html.Div(children=[
              html.Div(
                  dcc.Dropdown(options=[
@@ -125,7 +126,6 @@ def update_lines(clicked_point, interval, variable):
         )
 
     return go.Figure(data=traces, layout=go.Layout(
-        legend_orientation="h",
         hovermode='closest',
         uirevision=True,
         margin=go.layout.Margin(l=30, r=0, b=30, t=30)
