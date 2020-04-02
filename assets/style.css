@@ -1,6 +1,8 @@
 .main {
     height: 100vh; /* Fallback for browsers that do not support Custom Properties */
     height: calc(var(--vh, 1vh) * 100 - 30px);
+    display: flex;
+    flex-direction: column;
 }
 
 .weather-dropdowns {
@@ -32,4 +34,23 @@
     width: 100%;
     height: calc(50vh - 70px);
 
+}
+
+#controls {
+    margin: 5px;
+    pointer-events: none;
+    z-index: 20;
+}
+
+#sliders {
+    display: flex
+}
+
+#map {
+    height: 100%;
+}
+
+#map-container {
+    flex: auto;
+    min-height: 0;
 }

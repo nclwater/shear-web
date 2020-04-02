@@ -27,15 +27,11 @@ figure_layout = go.Layout(
         zoom=11
     )
 )
-fig = go.Figure([go.Choroplethmapbox(), go.Densitymapbox()], figure_layout)
 
 graph = dcc.Graph(
     id='map',
-    figure=fig,
+    figure=go.Figure(),
     clear_on_unhover=True,
-    style={
-        'height': '70%'
-    }
 )
 
 
@@ -111,19 +107,18 @@ basemap_dropdown = html.Div(children=[
 
 controls = html.Div(id='controls',
                     children=[
-                        slider,
-                        rainfall_slider,
-                        duration_slider,
+                        html.Div(id='sliders', children=[
+                            slider,
+                            rainfall_slider,
+                            duration_slider
+                        ]),
                         html.Div(children=[green_areas_div, density_div, buildings_div, basemap_dropdown],
                                  style={'textAlign': 'center', 'pointerEvents': 'auto'})],
-                    style={
-                        'margin': 5,
-                        'pointerEvents': 'none',
-                        'zIndex': '20'
-                      })
+                    )
 
 def layout(navbar):
-    return html.Div(children=[navbar, controls, graph], className='main')
+    return html.Div(children=[navbar, controls, html.Div(graph, id='map-container')],
+                    className='main')
 
 
 below = ''
