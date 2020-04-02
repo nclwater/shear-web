@@ -31,27 +31,6 @@ new_index[(stations.station_name == 'ACTogether-HQ') &
 
 stations = stations.set_index(new_index)
 
-children = [
-    html.Div(children=[
-        html.Div(
-            dcc.Dropdown(options=[
-            dict(label='Hourly',  value='1H'),
-            dict(label='Daily', value='1D'),
-            dict(label='Monthly', value='1M')],
-            id='interval', value='1H', className='dropdown'),
-        ),
-
-        dcc.Dropdown(options=[
-                dict(label='Rain (mm)', value='rain'),
-                dict(label='Wind Speed (km/h)', value='wind_speed'),
-                dict(label='Temperature (C)', value='temp_out')
-            ], id='variable', value='rain', className='dropdown')
-    ], className='weather-dropdowns'),
-
-    dcc.Loading(dcc.Graph(id='weather', style={'height': '100%'}), style={'height': '300px'}),
-
-]
-
 df = gpd.read_file(os.path.join(folder, 'station_locations.geojson')).sort_values('Name')
 
 lat = df.geometry.y
@@ -84,6 +63,7 @@ locations_layout = go.Layout(
         zoom=10
     )
 )
+
 locations_figure = go.Figure(data, locations_layout)
 
 locations_graph = dcc.Graph(
@@ -92,8 +72,34 @@ locations_graph = dcc.Graph(
     clear_on_unhover=True,
 )
 
-children.append(locations_graph)
-children.append(html.A(id='download-link', children='Download Data'))
+children = [
+
+    html.Div(dcc.Loading(dcc.Graph(id='weather')), id='weather-container'),
+    html.Div(
+        [locations_graph,
+         html.Div(children=[
+             html.Div(
+                 dcc.Dropdown(options=[
+                     dict(label='Hourly', value='1H'),
+                     dict(label='Daily', value='1D'),
+                     dict(label='Monthly', value='1M')],
+                     id='interval', value='1H', className='dropdown'),
+             ),
+
+             dcc.Dropdown(options=[
+                 dict(label='Rain (mm)', value='rain'),
+                 dict(label='Wind Speed (km/h)', value='wind_speed'),
+                 dict(label='Temperature (C)', value='temp_out')
+             ], id='variable', value='rain', className='dropdown'),
+
+             html.A(id='download-link', children='Download Data')
+
+         ], className='weather-dropdowns'),
+         ],
+        id='map-and-dropdown-container'
+    )
+
+]
 
 def layout(navbar):
     l = html.Div(children=[navbar] + children)
@@ -120,9 +126,11 @@ def update_lines(clicked_point, interval, variable):
         )
 
     return go.Figure(data=traces, layout=go.Layout(
+        legend_orientation="h",
         hovermode='closest',
         uirevision=True,
-        margin=go.layout.Margin(l=20, r=0, b=20, t=20)))
+        # margin=go.layout.Margin(l=20, r=0, b=20, t=20)
+        ))
 
 @app.callback(Output('download-link', 'href'),
               [
