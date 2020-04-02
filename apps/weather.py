@@ -102,8 +102,7 @@ children = [
 ]
 
 def layout(navbar):
-    l = html.Div(children=[navbar] + children)
-    return l
+    return html.Div(children=[navbar] + children, className='main')
 
 
 @app.callback(Output(component_id='weather', component_property='figure'),
@@ -129,7 +128,7 @@ def update_lines(clicked_point, interval, variable):
         legend_orientation="h",
         hovermode='closest',
         uirevision=True,
-        # margin=go.layout.Margin(l=20, r=0, b=20, t=20)
+        margin=go.layout.Margin(l=30, r=0, b=30, t=30)
         ))
 
 @app.callback(Output('download-link', 'href'),

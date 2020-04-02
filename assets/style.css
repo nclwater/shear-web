@@ -1,5 +1,5 @@
 .main {
-    /*height: 100vh; !* Fallback for browsers that do not support Custom Properties *!*/
+    height: 100vh; /* Fallback for browsers that do not support Custom Properties */
     height: calc(var(--vh, 1vh) * 100 - 30px);
 }
 
@@ -24,10 +24,12 @@
 
 #locations {
     width: 100%;
+
 }
 
 #map-and-dropdown-container {
     display: inline-flex;
     width: 100%;
+    height: calc(50vh - 70px);
 
 }
