@@ -6,6 +6,8 @@ import os
 import geopandas as gpd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
+from datetime import datetime
+import numpy as np
 
 folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data/weather'))
 
@@ -25,9 +27,9 @@ for locations_graph in paths:
 
 # numeric_cols = ['wind_speed', 'rain', 'temp']
 
-new_index = pd.np.array(stations.index)
+new_index = np.array(stations.index)
 new_index[(stations.station_name == 'ACTogether-HQ') &
-          (stations.index < pd.datetime(day=31, month=7, year=2019))] += pd.np.timedelta64(87, 'D')
+          (stations.index < datetime(day=31, month=7, year=2019))] += np.timedelta64(87, 'D')
 
 stations = stations.set_index(new_index)
 

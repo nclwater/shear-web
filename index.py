@@ -19,7 +19,7 @@ from apps import flood, weather
 
 
 app.layout = html.Div([
-    dcc.Location(id='url', pathname='/flood', refresh=False),
+    dcc.Location(id='url', refresh=False),
     html.Div(id='page-content')
 ])
 
