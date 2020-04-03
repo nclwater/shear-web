@@ -70,13 +70,13 @@ rainfall_slider = create_slider('Rainfall Amount (mm)', 'weather-slider', rainfa
 duration_slider = create_slider('Rainfall Duration (hrs)', 'duration-slider', marks=duration_marks)
 
 green_areas = dcc.Checklist(id='green-areas', options=[{'label': 'Green Areas', 'value': '-'}])
-green_areas_div = html.Div(green_areas, style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
+green_areas_div = html.Div(green_areas, className='checkbox')
 
 density = dcc.Checklist(id='density', options=[{'label': 'Show heat-map', 'value': '-'}])
-density_div = html.Div(density,  style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
+density_div = html.Div(density,  className='checkbox')
 
 buildings = dcc.Checklist(id='buildings', options=[{'label': 'Show building depths', 'value': '-'}])
-buildings_div = html.Div(buildings, style={'margin': 10, 'textAlign': 'center', 'display': 'inline-block'})
+buildings_div = html.Div(buildings, className='checkbox')
 
 basemap_dropdown = html.Div(children=[
 
@@ -101,9 +101,9 @@ basemap_dropdown = html.Div(children=[
                 "stamen-watercolor"
             ]
         ],
-        value='basic', style={'width': 150, 'height': '1.1em'}),
+        value='basic'),
 
-], style={'display': 'inline-block'})
+])
 
 controls = html.Div(id='controls',
                     children=[
@@ -113,7 +113,7 @@ controls = html.Div(id='controls',
                             duration_slider
                         ]),
                         html.Div(children=[green_areas_div, density_div, buildings_div, basemap_dropdown],
-                                 style={'textAlign': 'center', 'pointerEvents': 'auto'})],
+                                 id='checkbox-container')],
                     )
 
 def layout(navbar):

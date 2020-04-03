@@ -51,12 +51,24 @@
 
 #controls {
     margin: 5px;
-    pointer-events: none;
+    /*pointer-events: none;*/
     z-index: 20;
+}
+
+#basemap {
+    width: 200px;
+}
+
+#map-conatiner > div {
+    pointer-events: none;
 }
 
 #sliders {
     display: flex
+}
+
+#sliders > div {
+    flex: auto;
 }
 
 #map {
@@ -66,4 +78,22 @@
 #map-container {
     flex: auto;
     min-height: 0;
+}
+
+input {
+    margin: 5px;
+}
+
+#checkbox-container {
+    display: flex;
+    padding-left: 10vw;
+    padding-right: 10vw;
+
+}
+
+.checkbox {
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
