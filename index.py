@@ -8,7 +8,7 @@ navbar = dbc.NavbarSimple(
         dbc.NavItem(dbc.NavLink("Flooding", href="/flood")),
         dbc.NavItem(dbc.NavLink("Weather", href="/weather")),
     ],
-    brand="Kampala Flood Risk and Rainfall Data Dashboard",
+    brand="Kampala Flood Risk and Weather Data Dashboard",
     brand_href="#",
     color="primary",
     dark=True,
