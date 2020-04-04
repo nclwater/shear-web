@@ -1,0 +1,20 @@
+name: tests
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  docker:
+    runs-on: windows-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: build and publish
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: fmcclean/shear-web
+          tags: latest
