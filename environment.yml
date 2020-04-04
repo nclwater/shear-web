@@ -1,7 +1,6 @@
 dependencies:
   - python=3.7
   - geopandas=0.6.1
-  - gunicorn
   - pip
   - pip:
     - dash==1.9.1
