@@ -1,8 +1,8 @@
 name: tests
 on:
   push:
-    branches:
-      - develop
+    branches-ignore:
+      - master
 
 env:
   MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
