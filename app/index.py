@@ -27,15 +27,19 @@ app.layout = html.Div([
 server = app.server
 
 
+def layout(children):
+    return html.Div(children=[navbar, html.Div(children, className='content')], className='main')
+
+
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == '/':
         return html.Div(id='home')
     if pathname == '/flood':
-        return flood.layout(navbar)
+        return layout(flood.children)
     elif pathname == '/weather':
-        return weather.layout(navbar)
+        return layout(weather.children)
     else:
         return '404'
 

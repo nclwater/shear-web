@@ -3,21 +3,29 @@
     height: calc(var(--vh, 1vh) * 100 - 30px);
     display: flex;
     flex-direction: column;
+    align-items: center;
+    width: 100vw;
 }
 
-.weather-dropdowns {
-    flex: 1 1 0;
-    padding: 10px;
-}
-
-
-.weather-dropdowns .dropdown {
+nav {
     width: 100%;
-    padding-bottom: 10px;
+}
+
+.content {
+    max-width: 1140px;
+    width: 100%;
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 #loading-container {
-    flex: 1.5;
+    flex-basis: 0;
+    flex-grow: 1.5;
+    flex-shrink: 1;
     min-height: 0;
 }
 
@@ -27,27 +35,46 @@
 
 #weather {
     height: 100%;
-    min-height: 0;
+}
+
+.dropdowns-container {
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    padding: 10px;
+}
+
+.dropdowns-container .dropdown {
+    width: 100%;
+    padding-bottom: 10px;
 }
 
 #locations {
     width: 100%;
     height: 100%;
+    padding: 10px;
 
 }
 
 #locations-container {
-    flex: 1 1 0;
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
     min-width: 0;
 }
 
-#map-and-dropdown-container {
+#locations-and-dropdown-container {
     display: inline-flex;
     width: 100%;
-    flex: 1;
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
     min-height: 0;
 
 }
+
+/*Flood.py CSS*/
 
 #controls {
     margin: 5px;
@@ -68,7 +95,9 @@
 }
 
 #sliders > div {
-    flex: auto;
+    flex-basis: auto;
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
 #map {
@@ -76,7 +105,10 @@
 }
 
 #map-container {
-    flex: auto;
+    flex-basis: auto;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
     min-height: 0;
 }
 
@@ -92,7 +124,9 @@ input {
 }
 
 .checkbox {
-    flex: auto;
+    flex-basis: auto;
+    flex-grow: 1;
+    flex-shrink: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;

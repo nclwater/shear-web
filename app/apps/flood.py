@@ -116,9 +116,7 @@ controls = html.Div(id='controls',
                                  id='checkbox-container')],
                     )
 
-def layout(navbar):
-    return html.Div(children=[navbar, controls, html.Div(graph, id='map-container')],
-                    className='main')
+children = [controls, html.Div(graph, id='map-container')]
 
 
 below = ''
