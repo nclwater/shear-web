@@ -1,83 +1,52 @@
 from app import app
 import dash_core_components as dcc
 import dash_html_components as html
-import pandas as pd
 import os
-import geopandas as gpd
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
-from datetime import datetime
+from . import utils
 import numpy as np
+from plotly.colors import DEFAULT_PLOTLY_COLORS
 
-folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data/weather'))
+stations = utils.read_weather_data()
+locations = utils.read_station_locations()
 
-stations = pd.DataFrame()
-paths = [p for p in os.listdir(folder) if p.endswith('.txt')]
-for locations_graph in paths:
 
-    station = pd.read_csv(os.path.join(folder, locations_graph), sep='\t', parse_dates=[[0, 1]], header=[0, 1],
-                        dayfirst=True, na_values='---')
-    station = station.drop_duplicates(station.columns[0]).set_index(station.columns[0]).sort_index()
-    station.index.name = 'time'
-    station.columns = [' '.join([c.strip() for c in col if 'Unnamed' not in c]).lower() for col in station.columns]
-    station.columns = [col.replace(' ', '_').replace('.', '') for col in station.columns]
-    station['station_name'] = locations_graph[:-4]
+locations_figure = go.Figure(
+    data=[
+        go.Scattermapbox(
+            lat=locations.geometry.y,
+            lon=locations.geometry.x,
+            hovertext=locations['Name'],
+            hoverinfo='text',
+            ids=locations['id'],
+            marker=dict(
+                color=DEFAULT_PLOTLY_COLORS[:5],
+                size=10
+            ),
+        )],
 
-    stations = pd.concat([stations, station])
-
-# numeric_cols = ['wind_speed', 'rain', 'temp']
-
-new_index = np.array(stations.index)
-new_index[(stations.station_name == 'ACTogether-HQ') &
-          (stations.index < datetime(day=31, month=7, year=2019))] += np.timedelta64(87, 'D')
-
-stations = stations.set_index(new_index)
-
-df = gpd.read_file(os.path.join(folder, 'station_locations.geojson')).sort_values('Name')
-
-lat = df.geometry.y
-lon = df.geometry.x
-values = df.merge(stations[stations.index == stations.index[100]], left_on='id', right_on='station_name')
-
-data = [
-    go.Scattermapbox(
-        lat=lat,
-        lon=lon,
-        hovertext=df['Name'],
-        hoverinfo='text',
-        ids=df['id'],
-        marker=dict(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']),
-        # z=values.rain, radius=10
-    ),
-
-]
-locations_layout = go.Layout(
-    hovermode='closest',
-    margin=go.layout.Margin(l=0, r=0, b=0, t=0),
-    height=300,
-    uirevision=True,
-    mapbox=go.layout.Mapbox(
-        accesstoken=os.environ['MAPBOX_ACCESS_TOKEN'],
-        center=go.layout.mapbox.Center(
-            lat=df.geometry.y.mean(),
-            lon=df.geometry.x.mean()
-        ),
-        zoom=10
-    )
-)
-
-locations_figure = go.Figure(data, locations_layout)
+    layout=go.Layout(
+        hovermode='closest',
+        margin=go.layout.Margin(l=0, r=0, b=0, t=0),
+        uirevision=True,
+        mapbox=go.layout.Mapbox(
+            accesstoken=os.environ['MAPBOX_ACCESS_TOKEN'],
+            center=go.layout.mapbox.Center(
+                lat=locations.geometry.y.mean(),
+                lon=locations.geometry.x.mean()),
+            zoom=10
+        )))
 
 locations_graph = dcc.Graph(
     id='locations',
-    figure=locations_figure,
-    clear_on_unhover=True,
+    figure=locations_figure
 )
 
 children = [
 
     html.Div(id='loading-container', children=[
-        dcc.Loading(dcc.Graph(id='weather'))]),
+        dcc.Loading(dcc.Graph(id='weather', clear_on_unhover=True))]),
     html.Div(
         [html.Div(locations_graph, id='locations-container'),
          html.Div(children=[
@@ -104,6 +73,7 @@ children = [
 
 ]
 
+
 def layout(navbar):
     return html.Div(children=[navbar] + children, className='main')
 
@@ -115,23 +85,44 @@ def layout(navbar):
 def update_lines(clicked_point, interval, variable):
 
     traces = []
-    for name in stations.station_name.sort_values().unique():
-        s = stations[stations.station_name == name].sort_index()[variable].resample(interval)
+    for _, row in locations.iterrows():
+        s = stations[stations.station_name == row.id].sort_index()[variable].resample(interval)
         if variable == 'temp_out':
             s = s.mean()
         else:
             s = s.sum()
         traces.append(go.Scatter(
             x=s.index, y=s.values,
-            name=name,
-            visible=(True if name == clicked_point['points'][0]['id'] else 'legendonly') if clicked_point else True)
-        )
+            name=row.Name,
+            visible=(True if row.id == clicked_point['points'][0]['id'] else 'legendonly')
+            if clicked_point else True
+        ))
 
     return go.Figure(data=traces, layout=go.Layout(
         hovermode='closest',
         uirevision=True,
-        margin=go.layout.Margin(l=30, r=0, b=30, t=30)
+        margin=go.layout.Margin(l=30, r=0, b=30, t=30),
+        colorway=DEFAULT_PLOTLY_COLORS
         ))
+
+@app.callback(Output(component_id='locations', component_property='figure'),
+              [Input(component_id='weather', component_property='hoverData')])
+def highlight_point(hover_data):
+    if hover_data is None:
+        return locations_figure
+
+    fig = locations_figure.to_dict()
+
+    station_id = locations.id.values[hover_data['points'][0]['curveNumber']]
+    ids = fig['data'][0]['ids']
+    idx = np.where(ids == station_id)[0]
+    size = np.full(len(ids), 5)
+    size[idx] = 12
+
+    fig['data'][0]['marker']['size'] = size
+
+    return fig
+
 
 @app.callback(Output('download-link', 'href'),
               [
