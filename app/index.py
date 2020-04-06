@@ -5,12 +5,15 @@ import dash_bootstrap_components as dbc
 from app import app
 from apps import flood, weather
 
+app.title = "Kampala Flood Risk and Weather Data Dashboard"
+
 navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink("Flooding", href="/flood")),
         dbc.NavItem(dbc.NavLink("Weather", href="/weather")),
+        dbc.NavItem(dbc.NavLink("GitHub", href="http://github.com/fmcclean/shear-web")),
     ],
-    brand="Kampala Flood Risk and Weather Data Dashboard",
+    brand=app.title,
     brand_href="#",
     color="primary",
     dark=True,
