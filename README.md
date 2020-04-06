@@ -1,4 +1,5 @@
-# Kampala Flood Risk and Weather Data Dashboard
+# Kampala Flood Risk and Weather Data Dashboard ![](https://github.com/fmcclean/shear-web/workflows/build/badge.svg)
+
 
 ## Tests
 ![](https://github.com/fmcclean/shear-web/workflows/tests/badge.svg)
