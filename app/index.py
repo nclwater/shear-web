@@ -28,7 +28,10 @@ server = app.server
 
 
 def layout(children):
-    return html.Div(children=[navbar, html.Div(children, className='content')], className='main')
+    return html.Div(children=[
+        navbar,
+        html.Div(children, className='content')
+    ], className='main')
 
 
 @app.callback(Output('page-content', 'children'),
