@@ -28,12 +28,6 @@ figure_layout = go.Layout(
     )
 )
 
-graph = dcc.Graph(
-    id='map',
-    figure=go.Figure(),
-    clear_on_unhover=True,
-)
-
 
 thresholds = df.threshold.unique()
 rainfall = df.rainfall.unique()
@@ -116,10 +110,6 @@ controls = html.Div(id='controls',
                                  id='checkbox-container')],
                     )
 
-def layout(navbar):
-    return html.Div(children=[navbar, controls, html.Div(graph, id='map-container')],
-                    className='main')
-
 
 below = ''
 
@@ -133,7 +123,11 @@ below = ''
                Input(component_id='density', component_property='value'),
                Input(component_id='buildings', component_property='value'),
                ])
-def update_plot(threshold: int = 0, rain: int = 0, dur: int = 0,
+def update_plot(*args):
+    return create_plot(*args)
+
+
+def create_plot(threshold: int = 0, rain: int = 0, dur: int = 0,
                 green: bool = False, bm: bool = False, dens: bool = False, build: bool = False):
 
     green = 1 if green else 0
@@ -157,31 +151,42 @@ def update_plot(threshold: int = 0, rain: int = 0, dur: int = 0,
                             ))
     if build or dens:
         thresh = float(threshold_marks[threshold])
-        depth_values = building_depths['max_depth_{}'.format(features.run_id.iloc[0])]
-        buildings_above_threshold = building_depths[depth_values >= thresh]
+        depth_column = 'max_depth_{}'.format(features.run_id.iloc[0])
+
+        buildings_above_threshold = building_depths[building_depths[depth_column] >= thresh][
+            [depth_column, 'geometry', 'x', 'y']].rename(columns={depth_column: 'depth'})
 
         if build:
 
             t = go.Choroplethmapbox(
                 geojson=buildings_above_threshold.geometry.__geo_interface__,
                 locations=buildings_above_threshold.index,
-                z=depth_values[depth_values >= thresh],
-                below=below
+                z=buildings_above_threshold.depth,
+                below=below,
+                name='',
+                hovertemplate='<b>%{z} m</b>'
             )
             traces.append(t)
-        else:
-            traces.append(go.Choroplethmapbox())
 
         if dens:
             traces.append(go.Densitymapbox(lat=buildings_above_threshold.y,
                                            lon=buildings_above_threshold.x,
-                                           z=depth_values[depth_values >= thresh],
+                                           z=buildings_above_threshold.depth,
                                            radius=10,
                                            hoverinfo='skip',
                                            showscale=True if not build else False,
                                            below=below
                                            ))
-        else:
-            traces.append(go.Densitymapbox())
 
     return go.Figure(traces, figure_layout.update(mapbox_style=bm))
+
+
+graph = dcc.Graph(
+    id='map',
+    figure=create_plot(),
+    clear_on_unhover=True,
+)
+
+children = [controls, html.Div(graph, id='map-container'),
+            dcc.Loading(html.Div(id='loading'), fullscreen=True)
+]

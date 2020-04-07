@@ -50,13 +50,16 @@ children = [
     html.Div(
         [html.Div(locations_graph, id='locations-container'),
          html.Div(children=[
+             html.H4('Frequency:'),
              html.Div(
                  dcc.Dropdown(options=[
-                     dict(label='Hourly', value='1H'),
+                     dict(label='Monthly', value='1M'),
                      dict(label='Daily', value='1D'),
-                     dict(label='Monthly', value='1M')],
-                     id='interval', value='1H', className='dropdown'),
+                     dict(label='Hourly', value='1H'),
+                     ],
+                     id='interval', value='1M', className='dropdown'),
              ),
+             html.H4('Variable:'),
 
              dcc.Dropdown(options=[
                  dict(label='Rain (mm)', value='rain'),
@@ -66,17 +69,12 @@ children = [
 
              html.A(id='download-link', children='Download Data')
 
-         ], className='weather-dropdowns'),
+         ], className='dropdowns-container'),
          ],
-        id='map-and-dropdown-container'
+        id='locations-and-dropdown-container'
     )
 
 ]
-
-
-def layout(navbar):
-    return html.Div(children=[navbar] + children, className='main')
-
 
 @app.callback(Output(component_id='weather', component_property='figure'),
               [Input(component_id='locations', component_property='clickData'),
@@ -120,6 +118,7 @@ def highlight_point(hover_data):
     size[idx] = 12
 
     fig['data'][0]['marker']['size'] = size
+    fig['data'][0]['marker']['opacity'] = 1
 
     return fig
 
