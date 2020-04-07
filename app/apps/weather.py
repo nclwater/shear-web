@@ -50,6 +50,7 @@ children = [
     html.Div(
         [html.Div(locations_graph, id='locations-container'),
          html.Div(children=[
+             html.H4('Frequency:'),
              html.Div(
                  dcc.Dropdown(options=[
                      dict(label='Monthly', value='1M'),
@@ -58,6 +59,7 @@ children = [
                      ],
                      id='interval', value='1M', className='dropdown'),
              ),
+             html.H4('Variable:'),
 
              dcc.Dropdown(options=[
                  dict(label='Rain (mm)', value='rain'),

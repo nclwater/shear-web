@@ -151,23 +151,27 @@ def create_plot(threshold: int = 0, rain: int = 0, dur: int = 0,
                             ))
     if build or dens:
         thresh = float(threshold_marks[threshold])
-        depth_values = building_depths['max_depth_{}'.format(features.run_id.iloc[0])]
-        buildings_above_threshold = building_depths[depth_values >= thresh]
+        depth_column = 'max_depth_{}'.format(features.run_id.iloc[0])
+
+        buildings_above_threshold = building_depths[building_depths[depth_column] >= thresh][
+            [depth_column, 'geometry', 'x', 'y']].rename(columns={depth_column: 'depth'})
 
         if build:
 
             t = go.Choroplethmapbox(
                 geojson=buildings_above_threshold.geometry.__geo_interface__,
                 locations=buildings_above_threshold.index,
-                z=depth_values[depth_values >= thresh],
-                below=below
+                z=buildings_above_threshold.depth,
+                below=below,
+                name='',
+                hovertemplate='<b>%{z} m</b>'
             )
             traces.append(t)
 
         if dens:
             traces.append(go.Densitymapbox(lat=buildings_above_threshold.y,
                                            lon=buildings_above_threshold.x,
-                                           z=depth_values[depth_values >= thresh],
+                                           z=buildings_above_threshold.depth,
                                            radius=10,
                                            hoverinfo='skip',
                                            showscale=True if not build else False,
